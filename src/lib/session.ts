@@ -25,6 +25,13 @@ export async function getSession() {
   }
 }
 
+export async function getOrganizationId() {
+  const session = await getSession();
+  if (!session) return null;
+  // Por enquanto, o userId é o próprio organizationId (modelo 1:1)
+  return session.userId;
+}
+
 export async function clearSession() {
   const c = await cookies();
   c.delete(SESSION_COOKIE);

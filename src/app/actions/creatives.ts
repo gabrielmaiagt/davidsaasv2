@@ -4,8 +4,7 @@ import { db, storage } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-
-const DEFAULT_ORG = 'dev-org';
+import { getOrganizationId } from '@/lib/session';
 
 export async function uploadFileToStorage(file: File, folder: string): Promise<string> {
   if (!file || file.size === 0) return '';
@@ -22,13 +21,15 @@ export async function uploadFileToStorage(file: File, folder: string): Promise<s
     },
   });
 
-  // Make public to get url easily (or use makePublic())
   await fileRef.makePublic();
   
   return `https://storage.googleapis.com/${bucket.name}/${filename}`;
 }
 
 export async function createCreativeAction(state: any, formData: FormData, redirectResponse: boolean = true) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
   const campaignId = formData.get('campaignId') as string;
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
@@ -53,7 +54,7 @@ export async function createCreativeAction(state: any, formData: FormData, redir
   const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
 
   const creative = {
-    organizationId: DEFAULT_ORG,
+    organizationId: orgId,
     campaignId,
     title,
     description,
@@ -83,9 +84,14 @@ export async function createCreativeAction(state: any, formData: FormData, redir
 }
 
 export async function duplicateCreativeAction(id: string, count: number) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
   try {
     const doc = await db.collection('creatives').doc(id).get();
-    if (!doc.exists) throw new Error('Criativo não encontrado');
+    if (!doc.exists || doc.data()?.organizationId !== orgId) {
+      throw new Error('Criativo não encontrado ou acesso negado');
+    }
     
     const original = doc.data()!;
     const promises = [];
@@ -106,17 +112,20 @@ export async function duplicateCreativeAction(id: string, count: number) {
     await Promise.all(promises);
     revalidatePath('/dashboard/creatives');
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error duplicating creative', error);
-    return { error: 'Falha ao duplicar' };
+    return { error: error.message || 'Falha ao duplicar' };
   }
 }
 
 export async function bulkDuplicateAction(campaignId: string, count: number) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
   try {
     const snap = await db.collection('creatives')
       .where('campaignId', '==', campaignId)
-      .where('organizationId', '==', DEFAULT_ORG)
+      .where('organizationId', '==', orgId)
       .get();
       
     if (snap.empty) return { success: true };
@@ -150,6 +159,18 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
 }
 
 export async function deleteCreativeAction(id: string) {
-  await db.collection('creatives').doc(id).delete();
+  const orgId = await getOrganizationId();
+  if (!orgId) throw new Error('Não autorizado');
+
+  try {
+    const doc = await db.collection('creatives').doc(id).get();
+    if (doc.exists && doc.data()?.organizationId === orgId) {
+      await db.collection('creatives').doc(id).delete();
+    }
+  } catch (error) {
+    console.error('Error deleting creative', error);
+    throw new Error('Fallback action failure');
+  }
+  
   revalidatePath('/dashboard/creatives');
 }

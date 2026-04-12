@@ -6,17 +6,21 @@ import SetDefaultButton from './SetDefaultButton';
 import DeleteCampaignButton from './DeleteCampaignButton';
 import FeedUrlInput from './FeedUrlInput';
 
-import { headers } from 'next/headers';
+import { getOrganizationId } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CampaignsPage() {
+  const orgId = await getOrganizationId();
+  if (!orgId) redirect('/login');
+
   const headersList = await headers();
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = host.includes('localhost') ? 'http' : 'https';
   const baseUrl = `${protocol}://${host}`;
   const snapshot = await db.collection('campaigns')
-    .where('organizationId', '==', 'dev-org')
+    .where('organizationId', '==', orgId)
     .orderBy('createdAt', 'desc')
     .get();
 

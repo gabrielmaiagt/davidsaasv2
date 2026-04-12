@@ -1,23 +1,19 @@
-import { db } from '@/lib/firebase-admin';
-import Link from 'next/link';
-import { ArrowLeft, Video, Copy, Zap, MoreVertical } from 'lucide-react';
-import { notFound } from 'next/navigation';
-import BulkDuplicateButton from './BulkDuplicateButton';
-import CreativeCard from './CreativeCard';
+import { getOrganizationId } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-async function getFolderData(campaignId: string) {
+async function getFolderData(campaignId: string, orgId: string) {
   const [campaignDoc, creativesSnap] = await Promise.all([
     db.collection('campaigns').doc(campaignId).get(),
     db.collection('creatives')
-      .where('organizationId', '==', 'dev-org')
+      .where('organizationId', '==', orgId)
       .where('campaignId', '==', campaignId)
       .orderBy('createdAt', 'desc')
       .get()
   ]);
 
-  if (!campaignDoc.exists) return null;
+  if (!campaignDoc.exists || campaignDoc.data()?.organizationId !== orgId) return null;
 
   return {
     campaign: { id: campaignDoc.id, ...campaignDoc.data() } as any,
@@ -26,8 +22,11 @@ async function getFolderData(campaignId: string) {
 }
 
 export default async function FolderContentPage({ params }: { params: Promise<{ campaignId: string }> }) {
+  const orgId = await getOrganizationId();
+  if (!orgId) redirect('/login');
+
   const { campaignId } = await params;
-  const data = await getFolderData(campaignId);
+  const data = await getFolderData(campaignId, orgId);
 
   if (!data) return notFound();
 

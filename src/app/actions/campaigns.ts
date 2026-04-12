@@ -4,10 +4,12 @@ import { db } from '@/lib/firebase-admin';
 import { Campaign } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-
-const DEFAULT_ORG = 'dev-org';
+import { getOrganizationId } from '@/lib/session';
 
 export async function createCampaignAction(state: any, formData: FormData) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
   const name = formData.get('name') as string;
   const defaultLink = formData.get('defaultLink') as string;
   const defaultDescription = formData.get('defaultDescription') as string || '';
@@ -25,8 +27,8 @@ export async function createCampaignAction(state: any, formData: FormData) {
   try {
     const campaignsRef = db.collection('campaigns');
     
-    // Check if it's the first campaign to make it default
-    const existing = await campaignsRef.where('organizationId', '==', DEFAULT_ORG).limit(1).get();
+    // Check if it's the first campaign for this org to make it default
+    const existing = await campaignsRef.where('organizationId', '==', orgId).limit(1).get();
     const isDefault = existing.empty;
 
     const newCampaign: Partial<Campaign> = {
@@ -39,7 +41,7 @@ export async function createCampaignAction(state: any, formData: FormData) {
       currency,
       brand,
       category,
-      organizationId: DEFAULT_ORG,
+      organizationId: orgId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -55,9 +57,12 @@ export async function createCampaignAction(state: any, formData: FormData) {
 }
 
 export async function setDefaultCampaignAction(campaignId: string) {
+  const orgId = await getOrganizationId();
+  if (!orgId) throw new Error('Não autorizado');
+
   try {
     const campaignsRef = db.collection('campaigns');
-    const snapshot = await campaignsRef.where('organizationId', '==', DEFAULT_ORG).get();
+    const snapshot = await campaignsRef.where('organizationId', '==', orgId).get();
     
     const batch = db.batch();
     
@@ -81,6 +86,9 @@ export async function setDefaultCampaignAction(campaignId: string) {
 }
 
 export async function updateCampaignAction(id: string, state: any, formData: FormData) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
   const name = formData.get('name') as string;
   const defaultLink = formData.get('defaultLink') as string;
   const defaultDescription = formData.get('defaultDescription') as string;
@@ -93,6 +101,12 @@ export async function updateCampaignAction(id: string, state: any, formData: For
   }
 
   try {
+    // Validate ownership before update
+    const doc = await db.collection('campaigns').doc(id).get();
+    if (!doc.exists || doc.data()?.organizationId !== orgId) {
+      return { error: 'Acesso negado' };
+    }
+
     await db.collection('campaigns').doc(id).update({
       name,
       defaultLink,
@@ -112,8 +126,15 @@ export async function updateCampaignAction(id: string, state: any, formData: For
 }
 
 export async function deleteCampaignAction(id: string) {
+  const orgId = await getOrganizationId();
+  if (!orgId) throw new Error('Não autorizado');
+
   try {
-    await db.collection('campaigns').doc(id).delete();
+    // Validate ownership
+    const doc = await db.collection('campaigns').doc(id).get();
+    if (doc.exists && doc.data()?.organizationId === orgId) {
+      await db.collection('campaigns').doc(id).delete();
+    }
   } catch (error) {
     console.error('Error deleting campaign', error);
     throw new Error('Fallback action failure');

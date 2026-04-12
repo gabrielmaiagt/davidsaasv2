@@ -13,23 +13,26 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   try {
-    // 1. Fetch creatives tied to this campaign
-    const snap = await db.collection('creatives')
-      .where('organizationId', '==', 'dev-org')
-      .where('campaignId', '==', campaignId)
-      .get();
-      
-    const creatives = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    // 2. Fetch the Campaign data to map base URLs
+    // 1. Fetch the Campaign data first to identify the owner organization
     const campaignDoc = await db.collection('campaigns').doc(campaignId).get();
     
     if (!campaignDoc.exists) {
        return new Response('Campaign not found', { status: 404 });
     }
 
+    const campaignData = campaignDoc.data()!;
+    const orgId = campaignData.organizationId;
+
+    // 2. Fetch creatives tied to this campaign AND organization
+    const snap = await db.collection('creatives')
+      .where('organizationId', '==', orgId)
+      .where('campaignId', '==', campaignId)
+      .get();
+      
+    const creatives = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
     const campaignsMap = {
-      [campaignDoc.id]: campaignDoc.data()
+      [campaignDoc.id]: campaignData
     };
 
     // 3. Generate XML dynamically

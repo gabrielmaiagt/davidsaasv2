@@ -3,16 +3,22 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import CreativeForm from './CreativeForm';
 
-async function getCampaigns() {
+import { getOrganizationId } from '@/lib/session';
+import { redirect } from 'next/navigation';
+
+async function getCampaigns(orgId: string) {
   const snapshot = await db.collection('campaigns')
-    .where('organizationId', '==', 'dev-org')
+    .where('organizationId', '==', orgId)
     .orderBy('createdAt', 'desc')
     .get();
   return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
 }
 
 export default async function NewCreativePage() {
-  const campaigns = await getCampaigns();
+  const orgId = await getOrganizationId();
+  if (!orgId) redirect('/login');
+
+  const campaigns = await getCampaigns(orgId);
 
   return (
     <div className="p-8 max-w-4xl mx-auto">

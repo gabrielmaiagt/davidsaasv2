@@ -1,14 +1,13 @@
-import { db } from '@/lib/firebase-admin';
-import { LayoutGrid, Megaphone, Video, FileDown, Rocket, CheckCircle2, Copy } from 'lucide-react';
-import Link from 'next/link';
+import { getOrganizationId } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-async function getStats() {
-  const [campaigns, creatives, exports] = await Promise.all([
-    db.collection('campaigns').where('organizationId', '==', 'dev-org').count().get(),
-    db.collection('creatives').where('organizationId', '==', 'dev-org').count().get(),
-    db.collection('exports').where('organizationId', '==', 'dev-org').count().get(),
+async function getStats(orgId: string) {
+  const [campaigns, creatives, exportsCount] = await Promise.all([
+    db.collection('campaigns').where('organizationId', '==', orgId).count().get(),
+    db.collection('creatives').where('organizationId', '==', orgId).count().get(),
+    db.collection('exports').where('organizationId', '==', orgId).count().get(),
   ]);
 
   return {
@@ -19,7 +18,10 @@ async function getStats() {
 }
 
 export default async function DashboardPage() {
-  const stats = await getStats();
+  const orgId = await getOrganizationId();
+  if (!orgId) redirect('/login');
+
+  const stats = await getStats(orgId);
 
   return (
     <div className="space-y-10">

@@ -1,13 +1,12 @@
-import { db } from '@/lib/firebase-admin';
-import Link from 'next/link';
-import { Plus, Folder, Video, ChevronRight, LayoutGrid } from 'lucide-react';
+import { getOrganizationId } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-async function getFolders() {
+async function getFolders(orgId: string) {
   const [campaignsSnap, creativesSnap] = await Promise.all([
-    db.collection('campaigns').where('organizationId', '==', 'dev-org').get(),
-    db.collection('creatives').where('organizationId', '==', 'dev-org').get()
+    db.collection('campaigns').where('organizationId', '==', orgId).get(),
+    db.collection('creatives').where('organizationId', '==', orgId).get()
   ]);
 
   const campaigns = campaignsSnap.docs.map(doc => ({
@@ -28,7 +27,10 @@ async function getFolders() {
 }
 
 export default async function CreativesPage() {
-  const folders = await getFolders();
+  const orgId = await getOrganizationId();
+  if (!orgId) redirect('/login');
+
+  const folders = await getFolders(orgId);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

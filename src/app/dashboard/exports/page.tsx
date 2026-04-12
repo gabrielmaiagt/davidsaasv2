@@ -1,20 +1,22 @@
-import { db } from '@/lib/firebase-admin';
-import ExportForm from './ExportForm';
-import { FileOutput, Download } from 'lucide-react';
+import { getOrganizationId } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
-async function getCampaigns() {
-  const snapshot = await db.collection('campaigns').where('organizationId', '==', 'dev-org').get();
+async function getCampaigns(orgId: string) {
+  const snapshot = await db.collection('campaigns').where('organizationId', '==', orgId).get();
   return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
 }
 
-async function getExports() {
-  const snapshot = await db.collection('exports').where('organizationId', '==', 'dev-org').orderBy('createdAt', 'desc').limit(20).get();
+async function getExports(orgId: string) {
+  const snapshot = await db.collection('exports').where('organizationId', '==', orgId).orderBy('createdAt', 'desc').limit(20).get();
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
 }
 
 export default async function ExportsPage() {
-  const campaigns = await getCampaigns();
-  const history = await getExports();
+  const orgId = await getOrganizationId();
+  if (!orgId) redirect('/login');
+
+  const campaigns = await getCampaigns(orgId);
+  const history = await getExports(orgId);
 
   return (
     <div className="p-8">

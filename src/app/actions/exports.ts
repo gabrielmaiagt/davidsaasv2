@@ -6,6 +6,7 @@ import { create } from 'xmlbuilder2';
 import * as Papa from 'papaparse';
 import * as xlsx from 'xlsx';
 import { Creative, Campaign } from '@/types';
+import { getOrganizationId, getSession } from '@/lib/session';
 
 const GENERIC_PRICES = [19.90, 24.90, 29.90, 39.90, 40.00, 44.90, 49.90, 59.90, 79.90];
 
@@ -71,8 +72,8 @@ function createCSV(creatives: any[], campaignsMap: any) {
       link: item.finalUrl || defaultUrl || '',
       image_link: item.imageUrl || '',
       video_link: item.videoUrl || '',
-      brand: item.brand || campaign.brand || 'Premium Store',
-      product_type: item.category || campaign.category || 'General'
+      brand: item.brand || campaign.brand || 'Loja Oficial',
+      product_type: item.category || campaign.category || 'Geral'
     };
   });
   return Papa.unparse(data);
@@ -95,8 +96,8 @@ function createXLSX(creatives: any[], campaignsMap: any) {
       link: item.finalUrl || defaultUrl || '',
       image_link: item.imageUrl || '',
       video_link: item.videoUrl || '',
-      brand: item.brand || campaign.brand || 'Premium Store',
-      product_type: item.category || campaign.category || 'General'
+      brand: item.brand || campaign.brand || 'Loja Oficial',
+      product_type: item.category || campaign.category || 'Geral'
     };
   });
   const wb = xlsx.utils.book_new();
@@ -106,11 +107,16 @@ function createXLSX(creatives: any[], campaignsMap: any) {
 }
 
 export async function generateExportAction(state: any, formData: FormData) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  const session = await getSession();
+
   const type = formData.get('type') as 'xml' | 'csv' | 'xlsx';
   const campaignId = formData.get('campaignId') as string;
 
   // 1. Fetch creatives
-  let query: any = db.collection('creatives').where('organizationId', '==', 'dev-org');
+  let query: any = db.collection('creatives').where('organizationId', '==', orgId);
   if (campaignId) {
     query = query.where('campaignId', '==', campaignId);
   }
@@ -119,7 +125,7 @@ export async function generateExportAction(state: any, formData: FormData) {
   const creatives = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
 
   // 2. Fetch Campaigns for Mapping URLs
-  const campaignsSnap = await db.collection('campaigns').where('organizationId', '==', 'dev-org').get();
+  const campaignsSnap = await db.collection('campaigns').where('organizationId', '==', orgId).get();
   const campaignsMap = campaignsSnap.docs.reduce((acc: any, doc: any) => {
     acc[doc.id] = doc.data();
     return acc;
@@ -146,7 +152,7 @@ export async function generateExportAction(state: any, formData: FormData) {
   }
 
   // Upload to Storage
-  const filename = `exports/${Date.now()}-feed.${extension}`;
+  const filename = `exports/${orgId}/${Date.now()}-feed.${extension}`;
   const bucket = storage.bucket();
   const fileRef = bucket.file(filename);
 
@@ -159,13 +165,13 @@ export async function generateExportAction(state: any, formData: FormData) {
 
   // Save to History
   const exportRecord = {
-    organizationId: 'dev-org',
+    organizationId: orgId,
     campaignId: campaignId || null,
     type,
     filtersApplied: { campaignId },
     fileUrl,
     createdAt: new Date().toISOString(),
-    createdBy: 'Admin', // Pegaria do session handler
+    createdBy: session?.userId || 'System',
   };
 
   await db.collection('exports').add(exportRecord);
