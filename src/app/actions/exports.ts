@@ -7,7 +7,7 @@ import * as Papa from 'papaparse';
 import * as xlsx from 'xlsx';
 import { Creative, Offer } from '@/types';
 
-function createXML(creatives: any[], offersMap: any) {
+export function createXML(creatives: any[], campaignsMap: any) {
   // TikTok Ads standard catalog format
   const root = create({ version: '1.0', encoding: 'UTF-8' }).ele('rss', { version: '2.0', 'xmlns:g': 'http://base.google.com/ns/1.0' }).ele('channel');
   
@@ -16,8 +16,8 @@ function createXML(creatives: any[], offersMap: any) {
   root.ele('description').txt('Products feed for direct response ads');
 
   creatives.forEach(item => {
-    const offerUrl = offersMap[item.offerId]?.defaultFinalUrl || '';
-    const link = item.finalUrl || offerUrl || 'https://creative-feed.local/product';
+    const defaultUrl = campaignsMap[item.campaignId]?.name ? `https://creative-feed.local/campaign/${campaignsMap[item.campaignId].slug}` : '';
+    const link = item.finalUrl || defaultUrl || 'https://creative-feed.local/product';
 
     const xmlItem = root.ele('item');
     xmlItem.ele('g:id').txt(item.sku || item.id);
@@ -36,9 +36,9 @@ function createXML(creatives: any[], offersMap: any) {
   return root.end({ prettyPrint: true });
 }
 
-function createCSV(creatives: any[], offersMap: any) {
+function createCSV(creatives: any[], campaignsMap: any) {
   const data = creatives.map(item => {
-    const offerUrl = offersMap[item.offerId]?.defaultFinalUrl || '';
+    const defaultUrl = campaignsMap[item.campaignId]?.name ? `https://creative-feed.local/campaign/${campaignsMap[item.campaignId].slug}` : '';
     return {
       id: item.sku || item.id,
       title: item.title,
@@ -46,7 +46,7 @@ function createCSV(creatives: any[], offersMap: any) {
       availability: item.availability || 'in stock',
       condition: 'new',
       price: item.price ? `${item.price} USD` : '',
-      link: item.finalUrl || offerUrl || '',
+      link: item.finalUrl || defaultUrl || '',
       image_link: item.imageUrl || '',
       video_link: item.videoUrl || '',
       brand: item.brand || 'Generic',
@@ -56,9 +56,9 @@ function createCSV(creatives: any[], offersMap: any) {
   return Papa.unparse(data);
 }
 
-function createXLSX(creatives: any[], offersMap: any) {
+function createXLSX(creatives: any[], campaignsMap: any) {
   const data = creatives.map(item => {
-    const offerUrl = offersMap[item.offerId]?.defaultFinalUrl || '';
+    const defaultUrl = campaignsMap[item.campaignId]?.name ? `https://creative-feed.local/campaign/${campaignsMap[item.campaignId].slug}` : '';
     return {
       id: item.sku || item.id,
       title: item.title,
@@ -66,7 +66,7 @@ function createXLSX(creatives: any[], offersMap: any) {
       availability: item.availability || 'in stock',
       condition: 'new',
       price: item.price ? `${item.price} USD` : '',
-      link: item.finalUrl || offerUrl || '',
+      link: item.finalUrl || defaultUrl || '',
       image_link: item.imageUrl || '',
       video_link: item.videoUrl || '',
       brand: item.brand || 'Generic',
@@ -81,20 +81,20 @@ function createXLSX(creatives: any[], offersMap: any) {
 
 export async function generateExportAction(state: any, formData: FormData) {
   const type = formData.get('type') as 'xml' | 'csv' | 'xlsx';
-  const offerId = formData.get('offerId') as string;
+  const campaignId = formData.get('campaignId') as string;
 
   // 1. Fetch creatives
-  let query: admin.firestore.Query = db.collection('creatives').where('organizationId', '==', 'dev-org');
-  if (offerId) {
-    query = query.where('offerId', '==', offerId);
+  let query: any = db.collection('creatives').where('organizationId', '==', 'dev-org');
+  if (campaignId) {
+    query = query.where('campaignId', '==', campaignId);
   }
   
   const snap = await query.get();
   const creatives = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // 2. Fetch Offers for Mapping URLs
-  const offersSnap = await db.collection('offers').where('organizationId', '==', 'dev-org').get();
-  const offersMap = offersSnap.docs.reduce((acc, doc) => {
+  // 2. Fetch Campaigns for Mapping URLs
+  const campaignsSnap = await db.collection('campaigns').where('organizationId', '==', 'dev-org').get();
+  const campaignsMap = campaignsSnap.docs.reduce((acc, doc) => {
     acc[doc.id] = doc.data();
     return acc;
   }, {} as any);
@@ -104,17 +104,17 @@ export async function generateExportAction(state: any, formData: FormData) {
   let extension = '';
 
   if (type === 'xml') {
-    const xml = createXML(creatives, offersMap);
+    const xml = createXML(creatives, campaignsMap);
     buffer = Buffer.from(xml, 'utf-8');
     contentType = 'application/xml';
     extension = 'xml';
   } else if (type === 'csv') {
-    const csv = createCSV(creatives, offersMap);
+    const csv = createCSV(creatives, campaignsMap);
     buffer = Buffer.from(csv, 'utf-8');
     contentType = 'text/csv';
     extension = 'csv';
   } else {
-    buffer = createXLSX(creatives, offersMap) as Buffer;
+    buffer = createXLSX(creatives, campaignsMap) as Buffer;
     contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     extension = 'xlsx';
   }
@@ -134,9 +134,9 @@ export async function generateExportAction(state: any, formData: FormData) {
   // Save to History
   const exportRecord = {
     organizationId: 'dev-org',
-    offerId: offerId || null,
+    campaignId: campaignId || null,
     type,
-    filtersApplied: { offerId },
+    filtersApplied: { campaignId },
     fileUrl,
     createdAt: new Date().toISOString(),
     createdBy: 'Admin', // Pegaria do session handler

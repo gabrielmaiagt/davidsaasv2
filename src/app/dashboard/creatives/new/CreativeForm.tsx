@@ -3,8 +3,9 @@
 import { useActionState, useState } from 'react';
 import { createCreativeAction } from '@/app/actions/creatives';
 import { Loader2, Upload, Play, Image as ImageIcon } from 'lucide-react';
+import { Campaign } from '@/types';
 
-export default function CreativeForm({ offers }: { offers: { id: string, name: string }[] }) {
+export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
   const [, formAction, isPending] = useActionState(createCreativeAction as any, null);
   
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
@@ -81,10 +82,10 @@ export default function CreativeForm({ offers }: { offers: { id: string, name: s
         {/* Coluna 2: Dados do Catálogo */}
         <div className="space-y-5">
            <div className="space-y-2">
-            <label className="text-sm font-medium text-[#e4e4e7]" htmlFor="offerId">Oferta Vinculada</label>
-            <select id="offerId" name="offerId" required className="w-full bg-[#09090b] border border-[#27272a] text-[#fafafa] rounded-md px-4 py-2.5 text-sm">
-              <option value="">Selecione uma oferta...</option>
-              {offers.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            <label className="text-sm font-medium text-[#e4e4e7]" htmlFor="campaignId">Campanha Vinculada</label>
+            <select id="campaignId" name="campaignId" required className="w-full bg-[#09090b] border border-[#27272a] text-[#fafafa] rounded-md px-4 py-2.5 text-sm">
+              <option value="">Selecione uma campanha...</option>
+              {campaigns.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
           </div>
 
@@ -125,6 +126,15 @@ export default function CreativeForm({ offers }: { offers: { id: string, name: s
                   <option value="out of stock">Sem Estoque</option>
                 </select>
              </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#e4e4e7]" htmlFor="condition">Condição</label>
+            <select id="condition" name="condition" className="w-full bg-[#09090b] border border-[#27272a] text-[#fafafa] rounded-md px-2 py-2 text-sm">
+              <option value="new">Novo</option>
+              <option value="used">Usado</option>
+              <option value="refurbished">Recondicionado</option>
+            </select>
           </div>
 
           <div className="space-y-2">

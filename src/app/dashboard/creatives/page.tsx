@@ -5,21 +5,28 @@ import { Creative } from '@/types';
 import DeleteCreativeButton from './DeleteCreativeButton';
 
 async function getCreatives() {
-  const snapshot = await db.collection('creatives').where('organizationId', '==', 'dev-org').orderBy('createdAt', 'desc').get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Creative));
-}
+  const [creativesSnap, campaignsSnap] = await Promise.all([
+    db.collection('creatives').where('organizationId', '==', 'dev-org').orderBy('createdAt', 'desc').get(),
+    db.collection('campaigns').where('organizationId', '==', 'dev-org').get()
+  ]);
 
-async function getOffers() {
-  const snapshot = await db.collection('offers').where('organizationId', '==', 'dev-org').get();
-  return snapshot.docs.reduce((acc, doc) => {
+  const campaignsMap = campaignsSnap.docs.reduce((acc, doc) => {
     acc[doc.id] = doc.data().name;
     return acc;
   }, {} as Record<string, string>);
+
+  return creativesSnap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      campaignName: campaignsMap[data.campaignId] || 'Campanha Desconhecida'
+    };
+  }) as (Creative & { campaignName: string })[];
 }
 
 export default async function CreativesPage() {
   const creatives = await getCreatives();
-  const offersMap = await getOffers();
 
   return (
     <div className="p-8">
@@ -43,7 +50,7 @@ export default async function CreativesPage() {
             <tr>
               <th className="px-6 py-4">Mídia</th>
               <th className="px-6 py-4">Título (SKU)</th>
-              <th className="px-6 py-4">Oferta</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#a1a1aa] uppercase tracking-wider">Campanha</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4 text-right">Ações</th>
             </tr>
@@ -73,8 +80,8 @@ export default async function CreativesPage() {
                   <div className="font-medium text-white">{item.title}</div>
                   <div className="text-xs text-[#a1a1aa] mt-1">{item.sku}</div>
                 </td>
-                <td className="px-6 py-4 text-[#a1a1aa]">
-                  {offersMap[item.offerId] || 'Oferta Excluída'}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#a1a1aa]">
+                  <span className="bg-[#27272a] px-2 py-1 rounded text-xs">{item.campaignName}</span>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>

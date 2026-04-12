@@ -3,13 +3,16 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import CreativeForm from './CreativeForm';
 
-async function getOffers() {
-  const snapshot = await db.collection('offers').where('organizationId', '==', 'dev-org').get();
+async function getCampaigns() {
+  const snapshot = await db.collection('campaigns')
+    .where('organizationId', '==', 'dev-org')
+    .orderBy('createdAt', 'desc')
+    .get();
   return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
 }
 
 export default async function NewCreativePage() {
-  const offers = await getOffers();
+  const campaigns = await getCampaigns();
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -22,13 +25,13 @@ export default async function NewCreativePage() {
       </div>
 
       <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 shadow-sm">
-        {offers.length === 0 ? (
+        {campaigns.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-[#a1a1aa] mb-4">Você precisa criar uma Oferta primeiro antes de subir criativos.</p>
-            <Link href="/dashboard/offers/new" className="text-indigo-400 hover:underline">Ir para Ofertas</Link>
+            <p className="text-[#a1a1aa] mb-4">Parece que você ainda não tem Nenhuma Campanha. Você precisa de uma antes de subir criativos.</p>
+            <Link href="/dashboard/campaigns/new" className="text-indigo-400 hover:underline">Ir para Campanhas</Link>
           </div>
         ) : (
-          <CreativeForm offers={offers} />
+          <CreativeForm campaigns={campaigns as any} />
         )}
       </div>
     </div>

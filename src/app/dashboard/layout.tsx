@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { logoutAction } from '@/app/actions/auth';
 import { 
   LayoutDashboard, 
-  FolderKanban, 
+  Megaphone, 
   Clapperboard, 
   FileOutput, 
   LogOut,
@@ -16,7 +16,7 @@ import { useActionState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Ofertas', href: '/dashboard/offers', icon: FolderKanban },
+  { name: 'Campanhas', href: '/dashboard/campaigns', icon: Megaphone },
   { name: 'Criativos', href: '/dashboard/creatives', icon: Clapperboard },
   { name: 'Exportações', href: '/dashboard/exports', icon: FileOutput },
 ];

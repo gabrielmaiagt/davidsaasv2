@@ -17,15 +17,12 @@ export interface Organization {
   updatedAt: string;
 }
 
-export interface Offer {
+export interface Campaign {
   id: string;
   organizationId: string;
   name: string;
   slug: string;
-  description: string;
-  defaultFinalUrl: string;
-  defaultCategory: string;
-  status: 'active' | 'inactive';
+  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,7 +30,7 @@ export interface Offer {
 export interface Creative {
   id: string;
   organizationId: string;
-  offerId: string;
+  campaignId: string;
   title: string;
   description: string;
   finalUrl: string;
@@ -46,6 +43,7 @@ export interface Creative {
   tags: string[];
   price?: number;
   availability: 'in stock' | 'out of stock' | 'preorder';
+  condition: 'new' | 'used' | 'refurbished';
   status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
@@ -54,7 +52,7 @@ export interface Creative {
 export interface ExportRecord {
   id: string;
   organizationId: string;
-  offerId?: string;
+  campaignId?: string;
   type: 'xml' | 'csv' | 'xlsx';
   filtersApplied: any;
   fileUrl: string;

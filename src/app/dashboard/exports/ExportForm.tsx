@@ -3,9 +3,10 @@
 import { useActionState, useEffect } from 'react';
 import { generateExportAction } from '@/app/actions/exports';
 import { Loader2, DownloadCloud } from 'lucide-react';
+import { Campaign } from '@/types';
 
-export default function ExportForm({ offers }: { offers: { id: string, name: string }[] }) {
-  const [state, formAction, isPending] = useActionState(generateExportAction as unknown as any, null);
+export default function ExportForm({ campaigns }: { campaigns: Campaign[] }) {
+  const [state, formAction, isPending] = useActionState(generateExportAction as any, null);
 
   useEffect(() => {
     // Se a exportação funcionou e retornou a URL, abre numa nova aba para download direto
@@ -17,14 +18,14 @@ export default function ExportForm({ offers }: { offers: { id: string, name: str
   return (
     <form action={formAction} className="space-y-5">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-[#e4e4e7]" htmlFor="offerId">Filtrar por Oferta</label>
+        <label className="text-sm font-medium text-[#e4e4e7]" htmlFor="campaignId">Campanha Base</label>
         <select 
-          id="offerId" 
-          name="offerId" 
+          id="campaignId" 
+          name="campaignId" 
           className="w-full bg-[#09090b] border border-[#27272a] text-[#fafafa] rounded-md px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-colors text-sm"
         >
-          <option value="">Todas as Ofertas</option>
-          {offers.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+          <option value="">Todas (Full Catalog)</option>
+          {campaigns.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>
       </div>
 

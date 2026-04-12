@@ -2,8 +2,8 @@ import { db } from '@/lib/firebase-admin';
 import ExportForm from './ExportForm';
 import { FileOutput, Download } from 'lucide-react';
 
-async function getOffers() {
-  const snapshot = await db.collection('offers').where('organizationId', '==', 'dev-org').get();
+async function getCampaigns() {
+  const snapshot = await db.collection('campaigns').where('organizationId', '==', 'dev-org').get();
   return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
 }
 
@@ -13,7 +13,7 @@ async function getExports() {
 }
 
 export default async function ExportsPage() {
-  const offers = await getOffers();
+  const campaigns = await getCampaigns();
   const history = await getExports();
 
   return (
@@ -27,7 +27,7 @@ export default async function ExportsPage() {
         <div className="lg:col-span-1">
           <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-semibold mb-4">Novo Feed</h3>
-            <ExportForm offers={offers} />
+            <ExportForm campaigns={campaigns as any} />
           </div>
         </div>
 

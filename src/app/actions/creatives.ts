@@ -29,7 +29,7 @@ export async function uploadFileToStorage(file: File, folder: string): Promise<s
 }
 
 export async function createCreativeAction(state: any, formData: FormData) {
-  const offerId = formData.get('offerId') as string;
+  const campaignId = formData.get('campaignId') as string;
   const title = formData.get('title') as string;
   const description = formData.get('description') as string;
   const finalUrl = formData.get('finalUrl') as string;
@@ -38,6 +38,7 @@ export async function createCreativeAction(state: any, formData: FormData) {
   const tagsStr = formData.get('tags') as string;
   const skuInput = formData.get('sku') as string;
   const status = formData.get('status') as string;
+  const condition = formData.get('condition') as string;
   const availability = formData.get('availability') as string;
   const price = formData.get('price') ? Number(formData.get('price')) : null;
 
@@ -53,7 +54,7 @@ export async function createCreativeAction(state: any, formData: FormData) {
 
   const creative = {
     organizationId: DEFAULT_ORG,
-    offerId,
+    campaignId,
     title,
     description,
     finalUrl,
@@ -66,6 +67,7 @@ export async function createCreativeAction(state: any, formData: FormData) {
     tags,
     price,
     availability,
+    condition,
     status,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
