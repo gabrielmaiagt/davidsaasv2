@@ -68,18 +68,23 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     const remaining = 15 - currentCount;
     const toAdd = files.slice(0, remaining);
 
-    const newPending: PendingFile[] = toAdd.map((f: File) => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file: f,
-      title: f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "), // Nome limpo
-      thumbnail: null,
-      status: 'capturing'
-    }));
+    const newPending: PendingFile[] = toAdd.map((f: File) => {
+      const isTooBig = f.size > 50 * 1024 * 1024; // 50MB
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        file: f,
+        title: f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "), // Nome limpo
+        thumbnail: null,
+        status: isTooBig ? 'error' : 'capturing',
+        error: isTooBig ? 'Arquivo excede 50MB' : undefined
+      };
+    });
 
     setPendingFiles(prev => [...prev, ...newPending]);
 
-    // Processa thumbnails em background
+    // Processa thumbnails em background (apenas se não houver erro)
     for (const item of newPending) {
+      if (item.status === 'error') continue;
       const thumb = await captureThumbnail(item.file);
       setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => 
         p.id === item.id ? { ...p, thumbnail: thumb, status: 'pending' } : p
@@ -208,7 +213,7 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
                    <VideoIcon className="w-6 h-6 text-indigo-400" />
                 </div>
                 <p className="text-sm font-medium text-zinc-200">Arraste seus anúncios aqui</p>
-                <p className="text-xs text-zinc-500 mt-1">Limite de 15 vídeos por vez</p>
+                <p className="text-xs text-zinc-500 mt-1">Limite de 15 vídeos de até 50MB cada</p>
              </div>
 
              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
