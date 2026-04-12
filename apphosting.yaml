@@ -1,0 +1,21 @@
+# Configuração do Firebase App Hosting
+# Documentação: https://firebase.google.com/docs/app-hosting/configure
+
+runtime: nodejs20
+
+env:
+  # Variáveis de ambiente públicas (podem ficar no Git)
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "davidsaas-d74b2"
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "davidsaas-d74b2.firebasestorage.app"
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: "firebase-adminsdk-fbsvc@davidsaas-d74b2.iam.gserviceaccount.com"
+
+# Configuração de Segredos (devem estar no Google Cloud Secret Manager)
+# Para a Private Key, o Firebase recomenda usar o Secret Manager para segurança total.
+# Se você já configurou no console como Variável de Ambiente, ele funcionará,
+# mas esta é a forma profissional de "travar" a configuração.
+# secrets:
+#   - variable: FIREBASE_PRIVATE_KEY
+#     secret: FIREBASE_PRIVATE_KEY_SECRET
