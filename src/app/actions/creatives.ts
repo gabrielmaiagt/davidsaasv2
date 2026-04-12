@@ -82,6 +82,73 @@ export async function createCreativeAction(state: any, formData: FormData, redir
   return { success: true, creativeId: generatedSku };
 }
 
+export async function duplicateCreativeAction(id: string, count: number) {
+  try {
+    const doc = await db.collection('creatives').doc(id).get();
+    if (!doc.exists) throw new Error('Criativo não encontrado');
+    
+    const original = doc.data()!;
+    const promises = [];
+
+    for (let i = 1; i <= count; i++) {
+      const newSku = `${original.sku}-C${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      const copy = {
+        ...original,
+        title: `${original.title} (Clone ${i})`,
+        sku: newSku,
+        externalId: newSku,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      promises.push(db.collection('creatives').add(copy));
+    }
+
+    await Promise.all(promises);
+    revalidatePath('/dashboard/creatives');
+    return { success: true };
+  } catch (error) {
+    console.error('Error duplicating creative', error);
+    return { error: 'Falha ao duplicar' };
+  }
+}
+
+export async function bulkDuplicateAction(campaignId: string, count: number) {
+  try {
+    const snap = await db.collection('creatives')
+      .where('campaignId', '==', campaignId)
+      .where('organizationId', '==', DEFAULT_ORG)
+      .get();
+      
+    if (snap.empty) return { success: true };
+
+    const originalCreatives = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const promises: any[] = [];
+
+    originalCreatives.forEach(original => {
+      for (let i = 1; i <= count; i++) {
+        const newSku = `${original.sku}-BC${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+        const copy = {
+          ...original,
+          id: undefined, // Remove ID original
+          title: `${original.title} (Clone ${i})`,
+          sku: newSku,
+          externalId: newSku,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        promises.push(db.collection('creatives').add(copy));
+      }
+    });
+
+    await Promise.all(promises);
+    revalidatePath('/dashboard/creatives');
+    return { success: true };
+  } catch (error) {
+    console.error('Error in bulk duplication', error);
+    return { error: 'Falha ao duplicar em massa' };
+  }
+}
+
 export async function deleteCreativeAction(id: string) {
   await db.collection('creatives').doc(id).delete();
   revalidatePath('/dashboard/creatives');

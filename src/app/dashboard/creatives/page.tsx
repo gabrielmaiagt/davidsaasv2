@@ -1,104 +1,110 @@
 import { db } from '@/lib/firebase-admin';
 import Link from 'next/link';
-import { Plus, Clapperboard, Pencil } from 'lucide-react';
-import { Creative } from '@/types';
-import DeleteCreativeButton from './DeleteCreativeButton';
+import { Plus, Folder, Video, ChevronRight, LayoutGrid } from 'lucide-react';
 
-async function getCreatives() {
-  const [creativesSnap, campaignsSnap] = await Promise.all([
-    db.collection('creatives').where('organizationId', '==', 'dev-org').orderBy('createdAt', 'desc').get(),
-    db.collection('campaigns').where('organizationId', '==', 'dev-org').get()
+export const dynamic = 'force-dynamic';
+
+async function getFolders() {
+  const [campaignsSnap, creativesSnap] = await Promise.all([
+    db.collection('campaigns').where('organizationId', '==', 'dev-org').get(),
+    db.collection('creatives').where('organizationId', '==', 'dev-org').get()
   ]);
 
-  const campaignsMap = campaignsSnap.docs.reduce((acc, doc) => {
-    acc[doc.id] = doc.data().name;
-    return acc;
-  }, {} as Record<string, string>);
+  const campaigns = campaignsSnap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    count: 0
+  })) as any[];
 
-  return creativesSnap.docs.map(doc => {
+  creativesSnap.docs.forEach(doc => {
     const data = doc.data();
-    return {
-      id: doc.id,
-      ...data,
-      campaignName: campaignsMap[data.campaignId] || 'Campanha Desconhecida'
-    };
-  }) as (Creative & { campaignName: string })[];
+    const campaign = campaigns.find(c => c.id === data.campaignId);
+    if (campaign) {
+      campaign.count++;
+    }
+  });
+
+  return campaigns;
 }
 
 export default async function CreativesPage() {
-  const creatives = await getCreatives();
+  const folders = await getFolders();
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Criativos</h2>
-          <p className="text-[#a1a1aa] mt-1">Gerencie seus vídeos e variações para campanhas.</p>
+          <h2 className="text-3xl font-bold text-white tracking-tight">Suas Pastas</h2>
+          <p className="text-zinc-400 mt-1">Organize seus criativos por oferta e escale o volume.</p>
         </div>
         <Link 
           href="/dashboard/creatives/new" 
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Novo Criativo
         </Link>
       </div>
 
-      <div className="bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden shadow-sm">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-[#27272a]/50 text-[#a1a1aa] text-xs uppercase font-semibold">
-            <tr>
-              <th className="px-6 py-4">Mídia</th>
-              <th className="px-6 py-4">Título (SKU)</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-[#a1a1aa] uppercase tracking-wider">Campanha</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#27272a]">
-            {creatives.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-[#a1a1aa]">
-                  Nenhum criativo encontrado. Comece a subir seus vídeos!
-                </td>
-              </tr>
-            )}
-            {creatives.map(item => (
-              <tr key={item.id} className="hover:bg-[#27272a]/20 transition-colors">
-                <td className="px-6 py-4">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.title} className="w-16 h-16 object-cover rounded-md border border-[#27272a]" />
-                  ) : item.videoUrl ? (
-                    <video src={item.videoUrl} className="w-16 h-16 object-cover rounded-md border border-[#27272a]" muted />
-                  ) : (
-                     <div className="w-16 h-16 bg-[#27272a] rounded-md flex items-center justify-center">
-                        <Clapperboard className="w-6 h-6 text-[#52525b]" />
-                     </div>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="font-medium text-white">{item.title}</div>
-                  <div className="text-xs text-[#a1a1aa] mt-1">{item.sku}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#a1a1aa]">
-                  <span className="bg-[#27272a] px-2 py-1 rounded text-xs">{item.campaignName}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
-                    {item.status === 'active' ? 'Ativo' : 'Inativo'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right flex items-center justify-end gap-3 h-[90px]">
-                  <Link href={`/dashboard/creatives/${item.id}/edit`} className="text-[#a1a1aa] hover:text-indigo-400 transition-colors">
-                    <Pencil className="w-4 h-4" />
-                  </Link>
-                  <DeleteCreativeButton id={item.id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {folders.length === 0 ? (
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center">
+           <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Folder className="w-8 h-8 text-zinc-600" />
+           </div>
+           <h3 className="text-white font-medium">Nenhuma pasta ainda</h3>
+           <p className="text-zinc-500 text-sm mt-1 max-w-xs mx-auto">
+             Crie sua primeira campanha para começar a organizar seus criativos em pastas.
+           </p>
+           <Link href="/dashboard/campaigns/new" className="text-indigo-400 text-sm font-medium mt-4 inline-block hover:underline">
+             Criar Campanha →
+           </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {folders.map((folder) => (
+            <Link 
+              key={folder.id} 
+              href={`/dashboard/creatives/${folder.id}`}
+              className="group bg-zinc-900 border border-zinc-800 rounded-2xl p-5 hover:bg-zinc-800/50 hover:border-indigo-500/30 transition-all shadow-sm"
+            >
+              <div className="flex justify-between items-start mb-6">
+                 <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                    <Folder className="w-6 h-6" />
+                 </div>
+                 <div className="flex -space-x-2">
+                    {[...Array(Math.min(folder.count, 3))].map((_, i) => (
+                      <div key={i} className="w-6 h-6 border-2 border-zinc-900 bg-zinc-800 rounded-full flex items-center justify-center">
+                         <Video className="w-3 h-3 text-zinc-500" />
+                      </div>
+                    ))}
+                 </div>
+              </div>
+              
+              <h3 className="text-white font-semibold truncate group-hover:text-indigo-400 transition-colors">
+                {folder.name}
+              </h3>
+              
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-800/50">
+                <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
+                  {folder.count} Criativos
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          ))}
+          
+          {/* Action Card: New Campaign Shortcut */}
+          <Link 
+            href="/dashboard/campaigns/new"
+            className="border-2 border-dashed border-zinc-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center hover:border-zinc-700 transition-colors group"
+          >
+             <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Plus className="w-5 h-5 text-zinc-500" />
+             </div>
+             <p className="text-sm font-medium text-zinc-400">Nova Pasta</p>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
