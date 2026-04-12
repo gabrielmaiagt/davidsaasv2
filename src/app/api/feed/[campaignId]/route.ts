@@ -2,6 +2,8 @@ import { db } from '@/lib/firebase-admin';
 import { createXML } from '@/app/actions/exports';
 import { NextRequest } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ campaignId: string }> }) {
   const resolvedParams = await params;
   const campaignId = resolvedParams.campaignId;
