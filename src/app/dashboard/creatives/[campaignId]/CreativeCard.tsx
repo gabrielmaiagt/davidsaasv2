@@ -77,9 +77,9 @@ export default function CreativeCard({ creative }: { creative: any }) {
            SKU: <span className="text-on-surface-variant">{creative.sku.slice(-8)}</span>
         </p>
         
-        <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-2">
+        <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
            {/* Actions */}
-           <div className="flex items-center bg-white/5 rounded-xl p-1">
+           <div className="flex items-center bg-white/5 rounded-xl p-1 shrink-0">
              <Link 
                href={`/dashboard/creatives/${creative.id}/edit`} 
                className="p-2 text-on-surface-variant hover:text-white hover:bg-white/5 rounded-lg transition-all"
@@ -98,11 +98,11 @@ export default function CreativeCard({ creative }: { creative: any }) {
            </div>
 
            {/* Duplicate Action */}
-           <div className="relative">
+           <div className="relative shrink-0 flex-1 sm:flex-initial">
              <button 
                onClick={() => setShowOptions(!showOptions)}
                disabled={isPending}
-               className="h-10 px-4 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-xl transition-all flex items-center gap-2 border border-primary/20 group/btn"
+               className="h-10 w-full sm:w-auto px-3 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-xl transition-all flex items-center justify-center gap-2 border border-primary/20 group/btn"
                title="Duplicar este vídeo"
              >
                {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />}
