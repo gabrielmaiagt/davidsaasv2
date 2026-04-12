@@ -7,19 +7,26 @@ function getAdminApp() {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     
-    // Normalização robusta da chave privada
+    // Normalização ultra-agressiva da chave privada para evitar erros de DECODER em produção
     let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
     
-    // Remove aspas duplas/simples envolventes
+    // 1. Remove aspas de envolventes se houver
     rawKey = rawKey.trim().replace(/^["']|["']$/g, '');
     
-    // Converte sequências literais '\n' em quebradas de linha REAIS
-    // E remove possíveis \r que quebram no Linux/Firebase
-    const privateKey = rawKey.replace(/\\n/g, '\n').replace(/\r/g, '');
+    // 2. Resolve o problema clássico de \n vs quebra de linha real
+    // Substitui '\\n' (string literal) por '\n' (quebra de linha real)
+    let privateKey = rawKey.replace(/\\n/g, '\n');
 
-    console.log('FIREBASE: Initializing for Project:', projectId);
-    console.log('FIREBASE: Key starts with BEGIN?', privateKey.startsWith('-----BEGIN PRIVATE KEY-----'));
-    console.log('FIREBASE: Key ends with END?', privateKey.trim().endsWith('-----END PRIVATE KEY-----'));
+    // 3. Garante que se a chave veio sem quebras (uma linha só), ela seja minimamente aceitável
+    // mas o replace acima já costuma resolver. Limpamos espaços extras em cada linha.
+    privateKey = privateKey.split('\n').map(line => line.trim()).filter(Boolean).join('\n');
+
+    // 4. Verificação final de integridade
+    const isMalformed = !privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY');
+
+    console.log('FIREBASE: Project:', projectId);
+    console.log('FIREBASE: Key Length:', privateKey.length);
+    console.log('FIREBASE: Key Malformed?', isMalformed);
 
     // Fallback inteligente para o nome do bucket se a variável estiver faltando
     const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (projectId ? `${projectId}.firebasestorage.app` : undefined);
