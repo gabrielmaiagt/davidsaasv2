@@ -98,15 +98,15 @@ export async function createCreativeAction(state: any, formData: FormData, redir
     await db.collection('creatives').add(creative);
     
     revalidatePath('/dashboard/creatives');
-    if (redirectResponse) {
-      redirect('/dashboard/creatives');
-    }
-    return { success: true, creativeId: generatedSku };
+    return { success: true, creativeId: generatedSku, shouldRedirect: redirectResponse };
   } catch (err: any) {
     console.error('CREATE CREATIVE ERROR:', err);
     return { error: err.message || 'Ocorreu um erro inesperado no servidor.' };
   }
 }
+
+// Handler para o redirecionamento (deve ser chamado fora do try/catch se possível, 
+// mas aqui retornaremos o sinal para o componente cliente decidir se navega)
 
 export async function duplicateCreativeAction(id: string, count: number) {
   const orgId = await getOrganizationId();
