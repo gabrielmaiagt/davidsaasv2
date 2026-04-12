@@ -82,7 +82,7 @@ export default async function CampaignsPage() {
               <div className="bg-zinc-800/30 p-4 border-t border-zinc-800/60 flex items-center justify-between gap-3">
                 <SetDefaultButton id={campaign.id} isDefault={campaign.isDefault} />
                 <div className="flex items-center gap-2">
-                  {/* <Link href={`/dashboard/campaigns/${campaign.id}/edit`} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded transition">Editar</Link> */}
+                  <Link href={`/dashboard/campaigns/${campaign.id}/edit`} className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded transition">Editar</Link>
                   {!campaign.isDefault && (
                     <DeleteCampaignButton id={campaign.id} name={campaign.name} />
                   )}

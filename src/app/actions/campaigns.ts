@@ -78,6 +78,35 @@ export async function setDefaultCampaignAction(campaignId: string) {
   revalidatePath('/dashboard/creatives');
 }
 
+export async function updateCampaignAction(id: string, state: any, formData: FormData) {
+  const name = formData.get('name') as string;
+  const defaultLink = formData.get('defaultLink') as string;
+  const currency = formData.get('currency') as string;
+  const brand = formData.get('brand') as string;
+  const category = formData.get('category') as string;
+
+  if (!name || !id) {
+    return { error: 'O nome da Campanha é obrigatório.' };
+  }
+
+  try {
+    await db.collection('campaigns').doc(id).update({
+      name,
+      defaultLink,
+      currency,
+      brand,
+      category,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error updating campaign', error);
+    return { error: 'Erro ao atualizar a campanha.' };
+  }
+
+  revalidatePath('/dashboard/campaigns');
+  redirect('/dashboard/campaigns');
+}
+
 export async function deleteCampaignAction(id: string) {
   try {
     await db.collection('campaigns').doc(id).delete();
