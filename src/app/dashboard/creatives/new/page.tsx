@@ -2,6 +2,7 @@ import { db } from '@/lib/firebase-admin';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import CreativeForm from './CreativeForm';
+import { Suspense } from 'react';
 
 import { getOrganizationId } from '@/lib/session';
 import { redirect } from 'next/navigation';
@@ -37,7 +38,9 @@ export default async function NewCreativePage() {
             <Link href="/dashboard/campaigns/new" className="text-indigo-400 hover:underline">Ir para Campanhas</Link>
           </div>
         ) : (
-          <CreativeForm campaigns={campaigns as any} />
+          <Suspense fallback={<div className="text-center py-12 text-zinc-500">Carregando formulário...</div>}>
+            <CreativeForm campaigns={campaigns as any} />
+          </Suspense>
         )}
       </div>
     </div>

@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { createCreativeAction } from '@/app/actions/creatives';
 import { Loader2, Upload, Video as VideoIcon, CheckCircle2, XCircle, Trash2, FileVideo } from 'lucide-react';
 import { Campaign } from '@/types';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 interface PendingFile {
   id: string;
@@ -23,6 +24,15 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
   const [globalError, setGlobalError] = useState('');
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+
+  // Pré-seleção via URL
+  useEffect(() => {
+    const campaignId = searchParams.get('campaignId');
+    if (campaignId && campaigns.some(c => c.id === campaignId)) {
+      setSelectedCampaignId(campaignId);
+    }
+  }, [searchParams, campaigns]);
 
   // Lógica de captura de Thumbnail para novos arquivos
   const captureThumbnail = (file: File): Promise<Blob | null> => {
