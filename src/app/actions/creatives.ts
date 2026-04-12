@@ -51,7 +51,7 @@ export async function createCreativeAction(state: any, formData: FormData, redir
 
   const generatedSku = skuInput || `SKU-${uuidv4().split('-')[0].toUpperCase()}`;
 
-  const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+  const tags = tagsStr ? tagsStr.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
 
   const creative = {
     organizationId: orgId,
@@ -110,7 +110,7 @@ export async function duplicateCreativeAction(id: string, count: number) {
     }
 
     await Promise.all(promises);
-    revalidatePath('/dashboard/creatives');
+    revalidatePath('/dashboard/creatives', 'layout');
     return { success: true };
   } catch (error: any) {
     console.error('Error duplicating creative', error);
@@ -130,7 +130,7 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
       
     if (snap.empty) return { success: true };
 
-    const originalCreatives = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+    const originalCreatives = snap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as any[];
     const promises: any[] = [];
 
     originalCreatives.forEach(original => {
@@ -150,7 +150,7 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
     });
 
     await Promise.all(promises);
-    revalidatePath('/dashboard/creatives');
+    revalidatePath('/dashboard/creatives', 'layout');
     return { success: true };
   } catch (error) {
     console.error('Error in bulk duplication', error);
@@ -187,7 +187,7 @@ export async function updateCreativeAction(id: string, formData: FormData) {
       updatedAt: new Date().toISOString(),
     });
 
-    revalidatePath('/dashboard/creatives');
+    revalidatePath('/dashboard/creatives', 'layout');
     return { success: true };
   } catch (error) {
     console.error('Error updating creative', error);
@@ -196,21 +196,30 @@ export async function updateCreativeAction(id: string, formData: FormData) {
 }
 
 export async function deleteCreativeAction(id: string) {
+  console.log('SERVER: Chamando deleteCreativeAction para id:', id);
   const orgId = await getOrganizationId();
-  if (!orgId) return { error: 'Não autorizado' };
+  if (!orgId) {
+    console.log('SERVER: deleteCreativeAction - Não autorizado');
+    return { error: 'Não autorizado' };
+  }
 
   try {
+    console.log('SERVER: deleteCreativeAction - Verificando documento no Firestore...');
     const docRef = db.collection('creatives').doc(id);
     const doc = await docRef.get();
     
     if (doc.exists && doc.data()?.organizationId === orgId) {
+      console.log('SERVER: deleteCreativeAction - Deletando documento...');
       await docRef.delete();
-      revalidatePath('/dashboard/creatives');
+      console.log('SERVER: deleteCreativeAction - Revalidando caminho...');
+      // revalidatePath('/dashboard/creatives', 'layout');
+      console.log('SERVER: deleteCreativeAction - Sucesso (Revalidação pulada para teste)!');
       return { success: true };
     }
+    console.log('SERVER: deleteCreativeAction - Documento não encontrado ou sem permissão');
     return { error: 'Criativo não encontrado ou acesso negado' };
   } catch (error) {
-    console.error('Error deleting creative', error);
+    console.error('SERVER: deleteCreativeAction - ERRO FATAL:', error);
     return { error: 'Falha ao excluir criativo' };
   }
 }

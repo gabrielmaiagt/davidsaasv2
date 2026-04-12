@@ -19,18 +19,35 @@ export default async function CampaignsPage() {
   const host = headersList.get('host') || 'localhost:3000';
   const protocol = host.includes('localhost') ? 'http' : 'https';
   const baseUrl = `${protocol}://${host}`;
-  const snapshot = await db.collection('campaigns')
-    .where('organizationId', '==', orgId)
-    .orderBy('createdAt', 'desc')
-    .get();
 
-  const campaigns = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Campaign[];
+  let campaigns: Campaign[] = [];
+  let dbError = !db;
+
+  if (db) {
+    try {
+      const snapshot = await db.collection('campaigns')
+        .where('organizationId', '==', orgId)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      campaigns = snapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Campaign[];
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      dbError = true;
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      {dbError && (
+        <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-xl text-secondary text-xs font-bold flex items-center gap-2 mb-6">
+           <Megaphone className="w-4 h-4 shrink-0" />
+           Atenção: A conexão com o banco de dados falhou. Verifique suas chaves no .env.local.
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black tracking-tighter text-white mb-2 font-headline">Campanhas (Catálogos)</h1>
@@ -62,7 +79,7 @@ export default async function CampaignsPage() {
               </Link>
           </div>
         ) : (
-          campaigns.map((campaign) => (
+          campaigns.map((campaign: any) => (
             <div 
               key={campaign.id} 
               className={`bg-surface-container-low border rounded-2xl overflow-hidden shadow-sm flex flex-col transition-all hover:border-primary/30 group ${campaign.isDefault ? 'border-primary/50 shadow-[0_0_20px_rgba(95,255,247,0.05)]' : 'border-outline-variant/10'}`}

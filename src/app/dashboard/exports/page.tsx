@@ -6,23 +6,42 @@ import { redirect } from 'next/navigation';
 
 async function getCampaigns(orgId: string) {
   const snapshot = await db.collection('campaigns').where('organizationId', '==', orgId).get();
-  return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, name: doc.data().name }));
 }
 
 async function getExports(orgId: string) {
   const snapshot = await db.collection('exports').where('organizationId', '==', orgId).orderBy('createdAt', 'desc').limit(20).get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as any));
 }
 
 export default async function ExportsPage() {
   const orgId = await getOrganizationId();
   if (!orgId) redirect('/login');
 
-  const campaigns = await getCampaigns(orgId);
-  const history = await getExports(orgId);
+  let campaigns: any[] = [];
+  let history: any[] = [];
+  let dbError = !db;
+
+  if (db) {
+    try {
+      [campaigns, history] = await Promise.all([
+        getCampaigns(orgId),
+        getExports(orgId)
+      ]);
+    } catch (error) {
+      console.error('Error fetching export data:', error);
+      dbError = true;
+    }
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
+      {dbError && (
+        <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-xl text-secondary text-xs font-bold flex items-center gap-2 mb-6">
+           <History className="w-4 h-4 shrink-0" />
+           Atenção: A conexão com o banco de dados falhou. Verifique suas chaves no .env.local.
+        </div>
+      )}
       <div className="mb-10">
         <h2 className="text-4xl font-black tracking-tighter text-white font-headline">Gerador de Feeds</h2>
         <p className="text-on-surface-variant mt-2 opacity-80 text-sm">Exporte seus criativos para catálogos do TikTok Ads em escala industrial.</p>
@@ -72,7 +91,7 @@ export default async function ExportsPage() {
                       </td>
                     </tr>
                   )}
-                  {history.map(item => (
+                  {history.map((item: any) => (
                     <tr key={item.id} className="hover:bg-surface-container-high/50 transition-all group">
                       <td className="px-8 py-5 text-white font-medium text-xs">
                         {new Date(item.createdAt).toLocaleString('pt-BR')}

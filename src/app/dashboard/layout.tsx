@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <nav className="flex-1 space-y-1">
-          {navigation.map((item) => {
+          {navigation.map((item: any) => {
             const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard');
             return (
               <Link
@@ -67,13 +67,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Nova Campanha
           </Link>
           
-          <Link 
-            href="/dashboard/settings" 
-            className="flex items-center gap-3 px-4 py-3 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="font-headline uppercase tracking-wider text-[0.6875rem] font-bold">Configurações</span>
-          </Link>
+          {/* Configurações Removidas conforme solicitação */}
+          
 
           <form action={logoutFormAction}>
             <button 
@@ -91,14 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* TopAppBar */}
       <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-background/80 backdrop-blur-md z-40 flex items-center justify-between px-8 border-b border-outline-variant/10 shadow-[0_4px_32px_rgba(95,255,247,0.04)]">
         <div className="flex items-center gap-6">
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4 group-focus-within:text-primary transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Pesquisar operações..." 
-              className="bg-surface-container-high border-none rounded-lg pl-10 pr-4 py-1.5 text-xs w-64 focus:ring-1 focus:ring-primary transition-all text-on-surface placeholder:text-on-surface-variant/50"
-            />
-          </div>
+          {/* Busca Removida */}
           <nav className="hidden h:flex gap-6 items-center">
              <Link href="#" className="text-on-surface-variant font-headline font-medium text-xs hover:text-primary transition-colors uppercase tracking-widest">Performance</Link>
              <Link href="#" className="text-on-surface-variant font-headline font-medium text-xs hover:text-primary transition-colors uppercase tracking-widest">Logs</Link>
@@ -106,20 +94,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="bg-primary/5 border border-primary/20 text-primary px-4 py-1.5 rounded-lg text-[0.625rem] font-headline font-black uppercase tracking-widest hover:bg-primary/10 transition-all border-dashed">
-            Sincronizar TikTok
-          </button>
+          {/* Sincronização Removida */}
           
           <div className="flex items-center gap-3 border-l border-outline-variant/20 pl-4 ml-2">
-            <button className="relative text-on-surface-variant hover:text-primary transition-colors">
-              <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-secondary rounded-full border border-background"></span>
-            </button>
-            <div className="h-8 w-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30">
-               <div className="bg-gradient-to-br from-primary to-tertiary w-full h-full flex items-center justify-center text-[10px] font-black text-on-primary">
+            <button className="h-8 w-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30 hover:border-primary/50 transition-all active:scale-90 group ring-offset-background focus:ring-2 focus:ring-primary">
+               <div className="bg-gradient-to-br from-primary to-tertiary w-full h-full flex items-center justify-center text-[10px] font-black text-on-primary group-hover:brightness-110 transition-all">
                  M
                </div>
-            </div>
+            </button>
           </div>
         </div>
       </header>

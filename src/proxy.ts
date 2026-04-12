@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const session = request.cookies.get('cfm_session')?.value;
   const { pathname } = request.nextUrl;
+
+  console.log(`PROXY: [${request.method}] ${pathname} - Session: ${session ? 'Active' : 'Empty'}`);
 
   const isAuthRoute = pathname === '/login' || pathname === '/register';
   const isProtectedRoute = pathname.startsWith('/dashboard') || pathname === '/';
 
   if (!session && isProtectedRoute) {
-    if (pathname === '/') {
-       return NextResponse.redirect(new URL('/login', request.url));
-    }
+    console.log(`PROXY: Unauthenticated access to protected route ${pathname}. Redirecting to /login`);
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   if (session && isAuthRoute) {
+    console.log(`PROXY: Authenticated user on auth route ${pathname}. Redirecting to /dashboard`);
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

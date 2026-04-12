@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .where('campaignId', '==', campaignId)
       .get();
       
-    const creatives = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const creatives = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
 
     const campaignsMap = {
       [campaignDoc.id]: campaignData

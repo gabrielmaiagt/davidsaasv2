@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Plus, Folder, Video, ChevronRight } from 'lucide-react';
 import { getOrganizationId } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import FolderCard from './FolderCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +13,13 @@ async function getFolders(orgId: string) {
     db.collection('creatives').where('organizationId', '==', orgId).get()
   ]);
 
-  const campaigns = campaignsSnap.docs.map(doc => ({
+  const campaigns = campaignsSnap.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
     count: 0
   })) as any[];
 
-  creativesSnap.docs.forEach(doc => {
+  creativesSnap.docs.forEach((doc: any) => {
     const data = doc.data();
     const campaign = campaigns.find(c => c.id === data.campaignId);
     if (campaign) {
@@ -33,10 +34,26 @@ export default async function CreativesPage() {
   const orgId = await getOrganizationId();
   if (!orgId) redirect('/login');
 
-  const folders = await getFolders(orgId);
+  let folders: any[] = [];
+  let dbError = !db;
+
+  if (db) {
+    try {
+      folders = await getFolders(orgId);
+    } catch (error) {
+       console.error('Error fetching folders:', error);
+       dbError = true;
+    }
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
+      {dbError && (
+        <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-xl text-secondary text-xs font-bold flex items-center gap-2 mb-6">
+           <Video className="w-4 h-4 shrink-0" />
+           Atenção: A conexão com o banco de dados falhou. Verifique suas chaves no .env.local.
+        </div>
+      )}
       <div className="flex justify-between items-end gap-6">
         <div>
           <h2 className="text-3xl font-black text-white tracking-tighter font-headline">Suas Pastas Operacionais</h2>
@@ -66,37 +83,8 @@ export default async function CreativesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {folders.map((folder) => (
-            <Link 
-              key={folder.id} 
-              href={`/dashboard/creatives/${folder.id}`}
-              className="group bg-surface-container-low border border-outline-variant/10 rounded-2xl p-5 hover:bg-surface-container hover:border-primary/40 transition-all shadow-sm flex flex-col h-full"
-            >
-              <div className="flex justify-between items-start mb-6">
-                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-all duration-300">
-                    <Folder className="w-6 h-6" />
-                 </div>
-                 <div className="flex -space-x-2">
-                    {[...Array(Math.min(folder.count, 3))].map((_, i) => (
-                      <div key={i} className="w-7 h-7 border-2 border-surface-container-low group-hover:border-surface-container bg-surface-container-highest rounded-full flex items-center justify-center transition-colors">
-                         <Video className="w-3.5 h-3.5 text-on-surface-variant/60" />
-                      </div>
-                    ))}
-                 </div>
-              </div>
-              
-              <h3 className="text-white font-black font-headline truncate group-hover:text-primary transition-colors tracking-tight text-base mb-1">
-                {folder.name}
-              </h3>
-              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">ID: {folder.id.slice(0, 6)}</p>
-              
-              <div className="flex items-center justify-between mt-auto pt-5 border-t border-outline-variant/10">
-                <span className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">
-                  {folder.count} CRIATIVOS
-                </span>
-                <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </div>
-            </Link>
+          {folders.map((folder: any) => (
+            <FolderCard key={folder.id} folder={folder} />
           ))}
           
           {/* Action Card: New Campaign Shortcut */}

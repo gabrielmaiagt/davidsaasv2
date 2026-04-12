@@ -56,7 +56,7 @@ export async function createXML(creatives: any[], campaignsMap: any) {
 }
 
 function createCSV(creatives: any[], campaignsMap: any) {
-  const data = creatives.map(item => {
+  const data = creatives.map((item: any) => {
     const campaign = campaignsMap[item.campaignId] || {};
     const defaultUrl = campaign.defaultLink || '';
     const priceVal = item.price || campaign.defaultPrice || getRandomPrice(item.id);
@@ -80,7 +80,7 @@ function createCSV(creatives: any[], campaignsMap: any) {
 }
 
 function createXLSX(creatives: any[], campaignsMap: any) {
-  const data = creatives.map(item => {
+  const data = creatives.map((item: any) => {
     const campaign = campaignsMap[item.campaignId] || {};
     const defaultUrl = campaign.defaultLink || '';
     const priceVal = item.price || campaign.defaultPrice || getRandomPrice(item.id);

@@ -39,7 +39,7 @@ export default function BulkDuplicateButton({ campaignId, count }: { campaignId:
         <div className="absolute top-12 right-0 w-64 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
           <p className="text-[10px] font-bold text-zinc-500 px-3 py-2 uppercase tracking-widest">Multiplicar por:</p>
           <div className="grid grid-cols-2 gap-1 mb-2">
-            {[2, 3, 5, 10].map((n) => (
+            {[2, 3, 5, 10].map((n: number) => (
               <button
                 key={n}
                 onClick={() => handleDuplicate(n)}

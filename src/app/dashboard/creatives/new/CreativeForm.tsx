@@ -68,7 +68,7 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     const remaining = 15 - currentCount;
     const toAdd = files.slice(0, remaining);
 
-    const newPending: PendingFile[] = toAdd.map(f => ({
+    const newPending: PendingFile[] = toAdd.map((f: File) => ({
       id: Math.random().toString(36).substr(2, 9),
       file: f,
       title: f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "), // Nome limpo
@@ -81,14 +81,14 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     // Processa thumbnails em background
     for (const item of newPending) {
       const thumb = await captureThumbnail(item.file);
-      setPendingFiles(prev => prev.map(p => 
+      setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => 
         p.id === item.id ? { ...p, thumbnail: thumb, status: 'pending' } : p
       ));
     }
   };
 
   const removeFile = (id: string) => {
-    setPendingFiles(prev => prev.filter(f => f.id !== id));
+    setPendingFiles((prev: PendingFile[]) => prev.filter((f: PendingFile) => f.id !== id));
   };
 
   const handleUploadAll = async () => {
@@ -105,7 +105,7 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     for (const item of pendingFiles) {
       if (item.status === 'success') continue; // Pula os que já subiram
 
-      setPendingFiles(prev => prev.map(p => p.id === item.id ? { ...p, status: 'uploading' } : p));
+      setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => p.id === item.id ? { ...p, status: 'uploading' } : p));
 
       try {
         const formData = new FormData();
@@ -121,20 +121,20 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
         const result = await createCreativeAction(null, formData, false);
         
         if (result.success) {
-          setPendingFiles(prev => prev.map(p => p.id === item.id ? { ...p, status: 'success' } : p));
+          setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => p.id === item.id ? { ...p, status: 'success' } : p));
         } else {
           throw new Error('Falha no upload');
         }
       } catch (err) {
-        setPendingFiles(prev => prev.map(p => p.id === item.id ? { ...p, status: 'error', error: 'Falha ao subir' } : p));
+        setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => p.id === item.id ? { ...p, status: 'error', error: 'Falha ao subir' } : p));
       }
     }
 
     setIsUploadingGlobal(false);
     
     // Se todos deram certo, redireciona após um pequeno delay
-    const allSuccess = pendingFiles.every(f => f.status === 'success' || f.status === 'error'); // Finalizou
-    if (allSuccess && pendingFiles.some(f => f.status === 'success')) {
+    const allSuccess = pendingFiles.every((f: PendingFile) => f.status === 'success' || f.status === 'error'); // Finalizou
+    if (allSuccess && pendingFiles.some((f: PendingFile) => f.status === 'success')) {
        setTimeout(() => router.push('/dashboard/creatives'), 1500);
     }
   };
@@ -159,7 +159,7 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
                 className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
               >
                 <option value="">Selecione a Campanha...</option>
-                {campaigns.map(c => (
+                {campaigns.map((c: Campaign) => (
                   <option key={c.id} value={c.id}>{c.name} {c.isDefault ? '⭐' : ''}</option>
                 ))}
               </select>
@@ -230,7 +230,7 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
                      <div className="flex-1 min-w-0">
                         <input 
                           value={item.title} 
-                          onChange={(e) => setPendingFiles(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => p.id === item.id ? { ...p, title: e.target.value } : p))}
                           className="bg-transparent border-none text-sm font-medium text-white p-0 focus:ring-0 w-full truncate"
                           placeholder="Título do Criativo"
                         />

@@ -1,7 +1,7 @@
 'use client';
 
 import { Creative } from '@/types';
-import { Pencil, Trash2, Copy, Play, Loader2, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Copy, Play, Loader2, ChevronRight, Video } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { duplicateCreativeAction, deleteCreativeAction } from '@/app/actions/creatives';
@@ -14,24 +14,51 @@ export default function CreativeCard({ creative }: { creative: any }) {
   const router = useRouter();
 
   const handleDuplicate = async (multiplier: number) => {
+    console.log('Duplicando criativo:', creative.id, 'x', multiplier);
     setIsPending(true);
     setShowOptions(false);
-    const result = await duplicateCreativeAction(creative.id, multiplier);
-    if (result?.error) alert(result.error);
-    setIsPending(false);
-  };
-
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este vídeo? Isso removerá ele do feed de anúncios.')) return;
-    setIsPending(true);
     try {
-      const result = await deleteCreativeAction(creative.id);
+      const result = await duplicateCreativeAction(creative.id, multiplier);
       if (result?.error) {
+        console.error('Erro na duplicação:', result.error);
         alert(result.error);
+      } else {
+        console.log('Duplicação concluída com sucesso');
+        router.refresh();
       }
     } catch (err) {
-      alert('Ocorreu um erro ao tentar excluir o criativo.');
+      console.error('Falha catastrófica na duplicação:', err);
+      alert('Erro ao tentar duplicar');
     } finally {
+      setIsPending(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita que o clique "vaze"
+    console.log('Iniciando exclusão via API REST do criativo:', creative.id);
+    
+    // UI Otimista: mostramos o loading mas assumimos o sucesso visual se possível
+    setIsPending(true);
+    
+    try {
+      const response = await fetch(`/api/creatives/${creative.id}`, {
+        method: 'DELETE',
+      });
+      
+      const result = await response.json();
+
+      if (result?.error || !response.ok) {
+        console.error('Erro ao deletar via API:', result.error);
+        alert(result.error || 'Falha na exclusão');
+        setIsPending(false);
+      } else {
+        console.log('Criativo deletado com sucesso via API');
+        router.refresh(); 
+      }
+    } catch (err) {
+      console.error('Falha catastrófica ao deletar via API:', err);
+      alert('Ocorreu um erro de conexão ao tentar excluir.');
       setIsPending(false);
     }
   };
@@ -87,22 +114,15 @@ export default function CreativeCard({ creative }: { creative: any }) {
         
         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
            {/* Actions */}
-           <div className="flex items-center bg-white/5 rounded-xl p-1 shrink-0">
-             <Link 
-               href={`/dashboard/creatives/${creative.id}/edit`} 
-               className="p-2 text-on-surface-variant hover:text-white hover:bg-white/5 rounded-lg transition-all"
-               title="Editar"
-             >
-               <Pencil className="w-3.5 h-3.5" />
-             </Link>
-             <button 
-               onClick={handleDelete}
-               disabled={isPending}
-               className="p-2 text-on-surface-variant hover:text-secondary hover:bg-secondary/10 rounded-lg transition-all"
-               title="Excluir"
-             >
-               <Trash2 className="w-3.5 h-3.5" />
-             </button>
+           <div className="flex items-center bg-white/5 rounded-xl p-1 shrink-0 h-9">
+              <button 
+                onClick={handleDelete}
+                disabled={isPending}
+                className="p-2 text-on-surface-variant hover:text-secondary hover:bg-secondary/10 rounded-lg transition-all z-50 relative"
+                title="Excluir"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
            </div>
 
            {/* Duplicate Action */}
@@ -121,7 +141,7 @@ export default function CreativeCard({ creative }: { creative: any }) {
                <div className="absolute bottom-12 right-0 w-40 bg-[#171a1f] border border-white/10 rounded-2xl shadow-2xl p-2.5 z-[60] animate-in fade-in slide-in-from-bottom-3 duration-200">
                   <p className="text-[8px] font-black text-on-surface-variant/50 uppercase tracking-[0.2em] mb-2 px-1">Quantidade</p>
                   <div className="grid grid-cols-2 gap-2 mb-2">
-                     {[2, 3, 5, 10].map((n) => (
+                     {[2, 3, 5, 10].map((n: number) => (
                       <button
                           key={n}
                           onClick={() => handleDuplicate(n)}

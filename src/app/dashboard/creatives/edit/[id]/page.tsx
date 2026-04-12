@@ -13,11 +13,11 @@ async function getCreative(id: string, orgId: string) {
   return { id: doc.id, ...doc.data() } as any;
 }
 
-export default async function EditCreativePage({ params }: { params: Promise<{ creativeId: string }> }) {
+export default async function EditCreativePage({ params }: { params: Promise<{ id: string }> }) {
   const orgId = await getOrganizationId();
   if (!orgId) redirect('/login');
 
-  const { creativeId } = await params;
+  const { id: creativeId } = await params;
   const creative = await getCreative(creativeId, orgId);
 
   if (!creative) return notFound();

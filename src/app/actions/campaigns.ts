@@ -66,7 +66,7 @@ export async function setDefaultCampaignAction(campaignId: string) {
     
     const batch = db.batch();
     
-    snapshot.docs.forEach((doc) => {
+    snapshot.docs.forEach((doc: any) => {
       if (doc.id === campaignId) {
         batch.update(doc.ref, { isDefault: true, updatedAt: new Date().toISOString() });
       } else if (doc.data().isDefault) {

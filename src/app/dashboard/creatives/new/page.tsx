@@ -11,7 +11,7 @@ async function getCampaigns(orgId: string) {
     .where('organizationId', '==', orgId)
     .orderBy('createdAt', 'desc')
     .get();
-  return snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, name: doc.data().name }));
 }
 
 export default async function NewCreativePage() {

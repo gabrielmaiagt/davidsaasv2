@@ -22,16 +22,36 @@ async function getFolderData(campaignId: string, orgId: string) {
 
   return {
     campaign: { id: campaignDoc.id, ...campaignDoc.data() } as any,
-    creatives: creativesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
+    creatives: creativesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as any[]
   };
 }
 
-export default async function FolderContentPage({ params }: { params: Promise<{ campaignId: string }> }) {
+export default async function FolderContentPage({ params }: { params: Promise<{ id: string }> }) {
   const orgId = await getOrganizationId();
   if (!orgId) redirect('/login');
 
-  const { campaignId } = await params;
-  const data = await getFolderData(campaignId, orgId);
+  const { id: campaignId } = await params;
+  
+  let data: any = null;
+  let dbError = !db;
+
+  if (db) {
+    try {
+      data = await getFolderData(campaignId, orgId);
+    } catch (error) {
+      console.error('Error fetching folder data:', error);
+      dbError = true;
+    }
+  }
+
+  if (dbError) {
+    return (
+      <div className="bg-secondary/10 border border-secondary/20 p-8 rounded-2xl text-center">
+         <h3 className="text-secondary font-black font-headline text-xl mb-2">Erro de Conexão</h3>
+         <p className="text-on-surface-variant text-sm opacity-80">Não foi possível conectar ao banco de dados. Verifique a chave FIREBASE_PRIVATE_KEY no .env.local.</p>
+      </div>
+    );
+  }
 
   if (!data) return notFound();
 
@@ -78,7 +98,7 @@ export default async function FolderContentPage({ params }: { params: Promise<{ 
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6 gap-4">
-          {creatives.map((creative) => (
+          {creatives.map((creative: any) => (
             <CreativeCard key={creative.id} creative={creative} />
           ))}
         </div>
