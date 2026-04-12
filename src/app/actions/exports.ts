@@ -43,8 +43,12 @@ export async function createXML(creatives: any[], campaignsMap: any) {
     const currencyVal = campaign.currency || 'BRL';
     xmlItem.ele('g:price').txt(`${priceVal} ${currencyVal}`);
     
-    xmlItem.ele('g:brand').txt(item.brand || campaign.brand || 'Premium Store');
-    xmlItem.ele('g:product_type').txt(item.category || campaign.category || 'General');
+    xmlItem.ele('g:brand').txt(item.brand || campaign.brand || 'Loja Oficial');
+    
+    // Melhorando a performance de entrega com categorias
+    const categoryVal = item.category || campaign.category || 'Geral';
+    xmlItem.ele('g:google_product_category').txt(categoryVal);
+    xmlItem.ele('g:product_type').txt(categoryVal);
   });
 
   return root.end({ prettyPrint: true });
