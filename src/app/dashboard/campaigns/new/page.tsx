@@ -90,13 +90,13 @@ export default function NewCampaignPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300" htmlFor="brand">Marca Padrão</label>
-              <input id="brand" name="brand" type="text" placeholder="Nome da Loja" defaultValue="Global Brand" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
+              <label className="text-sm font-medium text-zinc-300" htmlFor="brand">Nome da Loja / Identidade</label>
+              <input id="brand" name="brand" type="text" placeholder="Ex: Boutique Premium" defaultValue="Loja Oficial" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300" htmlFor="category">Categoria Padrão</label>
-              <input id="category" name="category" type="text" placeholder="Ex: Health & Beauty" defaultValue="Digital Products" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
+              <label className="text-sm font-medium text-zinc-300" htmlFor="category">Nicho da Oferta</label>
+              <input id="category" name="category" type="text" placeholder="Ex: Saúde, Beleza, Drop" defaultValue="Geral" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
             </div>
           </div>
         </div>

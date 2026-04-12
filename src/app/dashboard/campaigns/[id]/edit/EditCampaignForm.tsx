@@ -87,12 +87,12 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="brand">Marca Padrão</label>
+            <label className="text-sm font-medium text-zinc-300" htmlFor="brand">Nome da Loja / Identidade</label>
             <input id="brand" name="brand" type="text" defaultValue={campaign.brand} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="category">Categoria Padrão</label>
+            <label className="text-sm font-medium text-zinc-300" htmlFor="category">Nicho da Oferta</label>
             <input id="category" name="category" type="text" defaultValue={campaign.category} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
           </div>
         </div>
