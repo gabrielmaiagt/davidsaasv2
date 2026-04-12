@@ -7,6 +7,14 @@ import * as Papa from 'papaparse';
 import * as xlsx from 'xlsx';
 import { Creative, Offer } from '@/types';
 
+const GENERIC_PRICES = [19.90, 24.90, 29.90, 39.90, 40.00, 44.90, 49.90, 59.90, 79.90];
+
+function getRandomPrice(seed: string) {
+  // Usa o ID do item para garantir que o preço seja "aleatório" mas consistente para o mesmo item
+  const charCodeSum = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return GENERIC_PRICES[charCodeSum % GENERIC_PRICES.length];
+}
+
 export async function createXML(creatives: any[], campaignsMap: any) {
   // TikTok Ads standard catalog format
   const root = create({ version: '1.0', encoding: 'UTF-8' }).ele('rss', { version: '2.0', 'xmlns:g': 'http://base.google.com/ns/1.0' }).ele('channel');
@@ -30,8 +38,8 @@ export async function createXML(creatives: any[], campaignsMap: any) {
     xmlItem.ele('g:availability').txt(item.availability || campaign.availability || 'in stock');
     xmlItem.ele('g:condition').txt(item.condition || campaign.condition || 'new');
     
-    // Preço inteligente: Usa o do item ou o padrão da campanha (ex: 19.90 BRL)
-    const priceVal = item.price || campaign.defaultPrice || 19.90;
+    // Preço inteligente: Usa o do item, da campanha ou gera um aleatório genérico (Ghost Price)
+    const priceVal = item.price || campaign.defaultPrice || getRandomPrice(item.id);
     const currencyVal = campaign.currency || 'BRL';
     xmlItem.ele('g:price').txt(`${priceVal} ${currencyVal}`);
     
@@ -46,7 +54,7 @@ function createCSV(creatives: any[], campaignsMap: any) {
   const data = creatives.map(item => {
     const campaign = campaignsMap[item.campaignId] || {};
     const defaultUrl = campaign.defaultLink || '';
-    const priceVal = item.price || campaign.defaultPrice || 19.90;
+    const priceVal = item.price || campaign.defaultPrice || getRandomPrice(item.id);
     const currencyVal = campaign.currency || 'BRL';
 
     return {
@@ -70,7 +78,7 @@ function createXLSX(creatives: any[], campaignsMap: any) {
   const data = creatives.map(item => {
     const campaign = campaignsMap[item.campaignId] || {};
     const defaultUrl = campaign.defaultLink || '';
-    const priceVal = item.price || campaign.defaultPrice || 19.90;
+    const priceVal = item.price || campaign.defaultPrice || getRandomPrice(item.id);
     const currencyVal = campaign.currency || 'BRL';
 
     return {

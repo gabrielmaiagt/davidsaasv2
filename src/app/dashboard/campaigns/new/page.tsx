@@ -73,22 +73,6 @@ export default function NewCampaignPage() {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 flex items-center gap-2" htmlFor="defaultPrice">
-                <DollarSign className="w-4 h-4 text-zinc-500" />
-                Preço Padrão (Fixo)
-              </label>
-              <input 
-                id="defaultPrice" 
-                name="defaultPrice" 
-                type="number" 
-                step="0.01"
-                placeholder="Ex: 19.90"
-                defaultValue="19.90"
-                className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm"
-              />
-            </div>
-
             <div className="md:col-span-2 space-y-2">
               <label className="text-sm font-medium text-zinc-300 flex items-center gap-2" htmlFor="defaultLink">
                 <LinkIcon className="w-4 h-4 text-zinc-500" />
