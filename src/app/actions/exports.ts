@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { create } from 'xmlbuilder2';
 import * as Papa from 'papaparse';
 import * as xlsx from 'xlsx';
-import { Creative, Offer } from '@/types';
+import { Creative, Campaign } from '@/types';
 
 const GENERIC_PRICES = [19.90, 24.90, 29.90, 39.90, 40.00, 44.90, 49.90, 59.90, 79.90];
 
