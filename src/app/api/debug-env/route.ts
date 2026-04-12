@@ -20,9 +20,30 @@ export async function GET() {
     appName: adminApp?.name,
   };
 
+  let dbTest = {
+    success: false,
+    error: null as any,
+    count: 0
+  };
+
+  if (db) {
+    try {
+      const snap = await db.collection('campaigns').limit(1).get();
+      dbTest.success = true;
+      dbTest.count = snap.size;
+    } catch (e: any) {
+      dbTest.error = {
+        message: e.message,
+        code: e.code,
+        details: e.details
+      };
+    }
+  }
+
   return NextResponse.json({
     envStatus,
     firebaseStatus,
+    dbTest,
     timestamp: new Date().toISOString()
   });
 }
