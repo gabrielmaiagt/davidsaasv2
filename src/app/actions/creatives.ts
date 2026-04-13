@@ -178,7 +178,7 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
     const chunkSize = 500;
     const allOperations: any[] = [];
     
-    originalDocs.forEach(doc => {
+    originalDocs.forEach((doc: any) => {
       const original = doc.data();
       for (let i = 1; i <= count; i++) {
         const newSku = `${original.sku}-BC${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
