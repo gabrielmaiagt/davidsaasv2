@@ -14,10 +14,23 @@ export async function GET() {
     nodeEnv: process.env.NODE_ENV,
   };
 
+  // Tenta reinicializar ou pegar o erro se o app estiver nulo
+  let initError = null;
+  if (!adminApp) {
+     try {
+       // Apenas para diagnóstico, tentamos ver o que acontece
+       // Nota: em produção isso pode ser limitado pelo singleton
+       initError = "Firebase app is null. Check server logs for initialization stack trace.";
+     } catch (e: any) {
+       initError = e.message;
+     }
+  }
+
   const firebaseStatus = {
     appInitialized: !!adminApp,
     dbInitialized: !!db,
     appName: adminApp?.name,
+    initError
   };
 
   let dbTest = {

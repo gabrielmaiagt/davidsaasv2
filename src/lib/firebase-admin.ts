@@ -13,7 +13,9 @@ function getAdminApp() {
 
     if (b64Key) {
       console.log('FIREBASE: Using B64 encoded private key');
-      privateKey = Buffer.from(b64Key, 'base64').toString('utf-8');
+      // Limpeza rigorosa para evitar quebras por aspas ou espaços acidentais no console
+      const cleanB64 = b64Key.trim().replace(/^["']|["']$/g, '');
+      privateKey = Buffer.from(cleanB64, 'base64').toString('utf-8');
     } else {
       // Fallback para a versão padrão
       let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
