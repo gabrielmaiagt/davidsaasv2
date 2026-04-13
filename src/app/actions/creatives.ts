@@ -1,6 +1,7 @@
 'use server';
 
 import { db, storage } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
@@ -111,11 +112,143 @@ export async function createCreativeAction(state: any, formData: FormData, redir
   }
 }
 
-// ... (duas funções de duplicação aqui se mantêm, mas a duplicarCampanha no campaigns.ts será a principal)
+
+export async function duplicateCreativeAction(id: string, count: number) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  try {
+    const doc = await db.collection('creatives').doc(id).get();
+    if (!doc.exists || doc.data()?.organizationId !== orgId) {
+      throw new Error('Criativo não encontrado ou acesso negado');
+    }
+    
+    const original = doc.data()!;
+    const campaignId = original.campaignId;
+    const promises = [];
+
+    for (let i = 1; i <= count; i++) {
+      const newSku = `${original.sku}-C${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      const copy = {
+        ...original,
+        title: `${original.title} (Clone ${i})`,
+        sku: newSku,
+        externalId: newSku,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      promises.push(db.collection('creatives').add(copy));
+    }
+
+    await Promise.all(promises);
+
+    // Atualizar contador da campanha
+    if (campaignId) {
+      await db.collection('campaigns').doc(campaignId).update({
+        creativeCount: admin.firestore.FieldValue.increment(count),
+        updatedAt: new Date().toISOString()
+      });
+    }
+
+    revalidatePath('/dashboard/creatives', 'layout');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error duplicating creative', error);
+    return { error: error.message || 'Falha ao duplicar' };
+  }
+}
+
+export async function bulkDuplicateAction(campaignId: string, count: number) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  try {
+    const snap = await db.collection('creatives')
+      .where('campaignId', '==', campaignId)
+      .where('organizationId', '==', orgId)
+      .get();
+      
+    if (snap.empty) return { success: true };
+
+    const originalDocs = snap.docs;
+    const originalCount = originalDocs.length;
+    const totalNewCreatives = originalCount * count;
+    
+    // Processar em chunks se for muito grande
+    const chunkSize = 500;
+    const allOperations: any[] = [];
+    
+    originalDocs.forEach(doc => {
+      const original = doc.data();
+      for (let i = 1; i <= count; i++) {
+        const newSku = `${original.sku}-BC${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+        const copy = {
+          ...original,
+          title: `${original.title} (Clone ${i})`,
+          sku: newSku,
+          externalId: newSku,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        allOperations.push(copy);
+      }
+    });
+
+    // Criar criativos
+    const promises = allOperations.map(op => db.collection('creatives').add(op));
+    await Promise.all(promises);
+
+    // Atualizar contador da campanha
+    await db.collection('campaigns').doc(campaignId).update({
+      creativeCount: admin.firestore.FieldValue.increment(totalNewCreatives),
+      updatedAt: new Date().toISOString()
+    });
+
+    revalidatePath('/dashboard/creatives', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error('Error in bulk duplication', error);
+    return { error: 'Falha ao duplicar em massa' };
+  }
+}
 
 export async function updateCreativeAction(id: string, formData: FormData) {
-  // ... (sem mudanças)
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  const title = formData.get('title') as string;
+  const description = formData.get('description') as string;
+  const price = formData.get('price') ? Number(formData.get('price')) : null;
+  const status = formData.get('status') as string;
+  const brand = formData.get('brand') as string;
+  const category = formData.get('category') as string;
+
+  try {
+    const docRef = db.collection('creatives').doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists || doc.data()?.organizationId !== orgId) {
+      return { error: 'Criativo não encontrado ou acesso negado' };
+    }
+
+    await docRef.update({
+      title,
+      description,
+      price,
+      status,
+      brand,
+      category,
+      updatedAt: new Date().toISOString(),
+    });
+
+    revalidatePath('/dashboard/creatives', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating creative', error);
+    return { error: 'Falha ao atualizar criativo' };
+  }
 }
+
 
 export async function deleteCreativeAction(id: string) {
   console.log('SERVER: Chamando deleteCreativeAction para id:', id);
