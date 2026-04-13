@@ -13,25 +13,35 @@ function getAdminApp() {
 
     if (b64Key) {
       console.log('FIREBASE: Using B64 encoded private key');
-      // Limpeza rigorosa para evitar quebras por aspas ou espaços acidentais no console
       const cleanB64 = b64Key.trim().replace(/^["']|["']$/g, '');
-      privateKey = Buffer.from(cleanB64, 'base64').toString('utf-8').replace(/\\n/g, '\n');
+      privateKey = Buffer.from(cleanB64, 'base64').toString('utf-8');
     } else {
-      // Fallback para a versão padrão
-      let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
-      rawKey = rawKey.trim().replace(/^["']|["']$/g, '');
-      privateKey = rawKey.replace(/\\n/g, '\n');
+      privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
     }
 
+    // --- RECONSTRUÇÃO ROBUSTA DE PEM ---
+    // Remove cabeçalhos, rodapés e qualquer caractere de escape/espaço
+    const strippedKey = privateKey
+      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+      .replace(/-----END PRIVATE KEY-----/g, '')
+      .replace(/\\n/g, '')
+      .replace(/\s/g, '');
+
+    // Reconstrói com quebras de linha a cada 64 caracteres (padrão RFC/OpenSSL)
+    const matches = strippedKey.match(/.{1,64}/g);
+    const formattedKey = `-----BEGIN PRIVATE KEY-----\n${matches?.join('\n')}\n-----END PRIVATE KEY-----\n`;
+    
+    // Sobrescreve com a versão limpa
+    privateKey = formattedKey;
+
     console.log('FIREBASE: Project:', projectId);
-    console.log('FIREBASE: Key Length:', privateKey.length);
+    console.log('FIREBASE: Key Length (Formatted):', privateKey.length);
     console.log('FIREBASE: Ready for Auth?', privateKey.includes('BEGIN PRIVATE KEY'));
 
-    // Fallback inteligente para o nome do bucket se a variável estiver faltando
     const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (projectId ? `${projectId}.firebasestorage.app` : undefined);
 
     if (projectId && clientEmail && privateKey.includes('BEGIN PRIVATE KEY')) {
-      console.log('FIREBASE: Attempting credential.cert initialization...');
+      console.log('FIREBASE: Initializing with formatted PEM...');
       return admin.initializeApp({
         credential: admin.credential.cert({
           projectId,
