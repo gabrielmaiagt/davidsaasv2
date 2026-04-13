@@ -7,14 +7,19 @@ function getAdminApp() {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     
-    // Normalização simplificada e robusta
-    let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
-    
-    // Remove aspas e espaços extras que o painel pode colocar
-    rawKey = rawKey.trim().replace(/^["']|["']$/g, '');
-    
-    // Converte \n literal para quebra de linha real (essencial para Linux/Produção)
-    const privateKey = rawKey.replace(/\\n/g, '\n');
+    // 1. Tenta pegar a versão blindada (Base64) - Melhor para Produção
+    let privateKey = '';
+    const b64Key = process.env.FIREBASE_PRIVATE_KEY_B64;
+
+    if (b64Key) {
+      console.log('FIREBASE: Using B64 encoded private key');
+      privateKey = Buffer.from(b64Key, 'base64').toString('utf-8');
+    } else {
+      // Fallback para a versão padrão
+      let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
+      rawKey = rawKey.trim().replace(/^["']|["']$/g, '');
+      privateKey = rawKey.replace(/\\n/g, '\n');
+    }
 
     console.log('FIREBASE: Project:', projectId);
     console.log('FIREBASE: Key Length:', privateKey.length);
