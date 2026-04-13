@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PlusCircle, Star, Megaphone } from 'lucide-react';
 import SetDefaultButton from './SetDefaultButton';
 import DeleteCampaignButton from './DeleteCampaignButton';
+import DuplicateCampaignButton from './DuplicateCampaignButton';
 import FeedUrlInput from './FeedUrlInput';
 import { headers } from 'next/headers';
 import { getOrganizationId } from '@/lib/session';
@@ -114,6 +115,7 @@ export default async function CampaignsPage() {
                   <Link href={`/dashboard/campaigns/${campaign.id}/edit`} className="text-[10px] font-black uppercase tracking-widest bg-surface-container-highest hover:bg-surface-container-high text-on-surface-variant hover:text-white px-3 py-2 rounded-lg transition-all border border-outline-variant/20">
                     Editar
                   </Link>
+                  <DuplicateCampaignButton id={campaign.id} />
                   {!campaign.isDefault && (
                     <DeleteCampaignButton id={campaign.id} name={campaign.name} />
                   )}

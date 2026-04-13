@@ -8,26 +8,19 @@ import FolderCard from './FolderCard';
 export const dynamic = 'force-dynamic';
 
 async function getFolders(orgId: string) {
-  const [campaignsSnap, creativesSnap] = await Promise.all([
-    db.collection('campaigns').where('organizationId', '==', orgId).get(),
-    db.collection('creatives').where('organizationId', '==', orgId).get()
-  ]);
+  const campaignsSnap = await db.collection('campaigns')
+    .where('organizationId', '==', orgId)
+    .orderBy('createdAt', 'desc')
+    .get();
 
-  const campaigns = campaignsSnap.docs.map((doc: any) => ({
-    id: doc.id,
-    ...doc.data(),
-    count: 0
-  })) as any[];
-
-  creativesSnap.docs.forEach((doc: any) => {
+  return campaignsSnap.docs.map((doc: any) => {
     const data = doc.data();
-    const campaign = campaigns.find(c => c.id === data.campaignId);
-    if (campaign) {
-      campaign.count++;
-    }
+    return {
+      id: doc.id,
+      ...data,
+      count: data.creativeCount || 0
+    };
   });
-
-  return campaigns;
 }
 
 export default async function CreativesPage() {

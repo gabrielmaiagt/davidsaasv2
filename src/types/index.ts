@@ -23,6 +23,7 @@ export interface Campaign {
   name: string;
   slug: string;
   isDefault: boolean;
+  creativeCount?: number;
   
   // Configurações Padrão de Catálogo (Uso para Feed)
   defaultLink: string;

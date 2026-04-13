@@ -142,3 +142,81 @@ export async function deleteCampaignAction(id: string) {
   
   revalidatePath('/dashboard/campaigns');
 }
+
+export async function duplicateCampaignAction(id: string) {
+  const orgId = await getOrganizationId();
+  if (!orgId) throw new Error('Não autorizado');
+
+  try {
+    const campaignDoc = await db.collection('campaigns').doc(id).get();
+    if (!campaignDoc.exists || campaignDoc.data()?.organizationId !== orgId) {
+      throw new Error('Campanha não encontrada ou acesso negado');
+    }
+
+    const originalData = campaignDoc.data() as Campaign;
+    const newName = `${originalData.name} (Cópia)`;
+    const newSlug = `${originalData.slug}-copy-${Math.random().toString(36).substring(2, 6)}`;
+
+    // 1. Criar a nova campanha com o contador zerado inicialmente
+    const newCampaignData: Partial<Campaign> = {
+      ...originalData,
+      name: newName,
+      slug: newSlug,
+      isDefault: false,
+      creativeCount: 0, // Será atualizado após a cópia dos criativos
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const newCampaignRef = await db.collection('campaigns').add(newCampaignData);
+    const newCampaignId = newCampaignRef.id;
+
+    // 2. Buscar criativos vinculados
+    const creativesSnap = await db.collection('creatives')
+      .where('campaignId', '==', id)
+      .where('organizationId', '==', orgId)
+      .get();
+
+    let duplicatedCount = 0;
+
+    if (!creativesSnap.empty) {
+      const docs = creativesSnap.docs;
+      const chunkSize = 500;
+      
+      // Processar em pacotes de 500 para não travar o Firebase
+      for (let i = 0; i < docs.length; i += chunkSize) {
+        const chunk = docs.slice(i, i + chunkSize);
+        const batch = db.batch();
+        
+        chunk.forEach(doc => {
+          const creativeData = doc.data();
+          const newDocRef = db.collection('creatives').doc(); // Gera novo ID
+          batch.set(newDocRef, {
+            ...creativeData,
+            campaignId: newCampaignId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          duplicatedCount++;
+        });
+
+        await batch.commit();
+        console.log(`BATCH: Processados ${i + chunk.length} de ${docs.length} criativos...`);
+      }
+    }
+
+    // 3. Atualizar o contador final na nova campanha
+    await newCampaignRef.update({
+      creativeCount: duplicatedCount,
+      updatedAt: new Date().toISOString()
+    });
+
+    revalidatePath('/dashboard/campaigns');
+    return { success: true, newId: newCampaignId };
+  } catch (error: any) {
+    console.error('Error duplicating campaign:', error);
+    return { error: error.message || 'Falha ao duplicar campanha' };
+  }
+}
+
+

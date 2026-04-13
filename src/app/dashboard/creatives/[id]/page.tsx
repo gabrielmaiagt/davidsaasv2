@@ -5,16 +5,27 @@ import { notFound, redirect } from 'next/navigation';
 import { getOrganizationId } from '@/lib/session';
 import BulkDuplicateButton from './BulkDuplicateButton';
 import CreativeCard from './CreativeCard';
+import Pagination from './Pagination';
 
 export const dynamic = 'force-dynamic';
 
-async function getFolderData(campaignId: string, orgId: string) {
-  const [campaignDoc, creativesSnap] = await Promise.all([
+async function getFolderData(campaignId: string, orgId: string, page: number = 1) {
+  const limit = 24;
+  const offset = (page - 1) * limit;
+
+  const [campaignDoc, creativesSnap, totalSnap] = await Promise.all([
     db.collection('campaigns').doc(campaignId).get(),
     db.collection('creatives')
       .where('organizationId', '==', orgId)
       .where('campaignId', '==', campaignId)
       .orderBy('createdAt', 'desc')
+      .limit(limit)
+      .offset(offset)
+      .get(),
+    db.collection('creatives')
+      .where('organizationId', '==', orgId)
+      .where('campaignId', '==', campaignId)
+      .count()
       .get()
   ]);
 
@@ -22,22 +33,32 @@ async function getFolderData(campaignId: string, orgId: string) {
 
   return {
     campaign: { id: campaignDoc.id, ...campaignDoc.data() } as any,
-    creatives: creativesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as any[]
+    creatives: creativesSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as any[],
+    totalCount: totalSnap.data().count,
+    pageSize: limit
   };
 }
 
-export default async function FolderContentPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function FolderContentPage({ 
+  params,
+  searchParams
+}: { 
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ page?: string }>
+}) {
   const orgId = await getOrganizationId();
   if (!orgId) redirect('/login');
 
   const { id: campaignId } = await params;
+  const { page: pageStr } = await searchParams;
+  const page = Number(pageStr) || 1;
   
   let data: any = null;
   let dbError = !db;
 
   if (db) {
     try {
-      data = await getFolderData(campaignId, orgId);
+      data = await getFolderData(campaignId, orgId, page);
     } catch (error) {
       console.error('Error fetching folder data:', error);
       dbError = true;
@@ -55,7 +76,8 @@ export default async function FolderContentPage({ params }: { params: Promise<{ 
 
   if (!data) return notFound();
 
-  const { campaign, creatives } = data;
+  const { campaign, creatives, totalCount, pageSize } = data;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
@@ -78,7 +100,7 @@ export default async function FolderContentPage({ params }: { params: Promise<{ 
         </div>
 
         <div className="flex items-center gap-4">
-          <BulkDuplicateButton campaignId={campaignId} count={creatives.length} />
+          <BulkDuplicateButton campaignId={campaignId} count={totalCount} />
           <Link 
             href={`/dashboard/creatives/new?campaignId=${campaignId}`}
             className="h-12 bg-primary text-on-primary px-8 rounded-xl font-headline font-black text-xs uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 flex items-center gap-2 shadow-lg shadow-primary/10"
@@ -97,11 +119,19 @@ export default async function FolderContentPage({ params }: { params: Promise<{ 
            </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6 gap-4">
-          {creatives.map((creative: any) => (
-            <CreativeCard key={creative.id} creative={creative} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6 gap-4">
+            {creatives.map((creative: any) => (
+              <CreativeCard key={creative.id} creative={creative} />
+            ))}
+          </div>
+
+          <Pagination 
+            currentPage={page} 
+            totalPages={totalPages} 
+            baseUrl={`/dashboard/creatives/${campaignId}`} 
+          />
+        </>
       )}
     </div>
   );
