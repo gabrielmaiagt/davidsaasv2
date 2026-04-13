@@ -50,16 +50,13 @@ function getAdminApp() {
   }
 }
 
-// Singleton pattern for Next.js hot-reloading
+// Singleton pattern to prevent multiple initializations
 const globalForAdmin = globalThis as unknown as {
   firebaseAdminApp: admin.app.App | undefined;
 };
 
 const app = globalForAdmin.firebaseAdminApp ?? getAdminApp();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForAdmin.firebaseAdminApp = app || undefined;
-}
+globalForAdmin.firebaseAdminApp = app || undefined;
 
 // Export safe accessors
 export const db = app ? admin.firestore(app) : null as any;
