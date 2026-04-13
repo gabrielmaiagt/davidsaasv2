@@ -9,9 +9,6 @@ env:
     value: "davidsaas-d74b2"
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: "davidsaas-d74b2.firebasestorage.app"
-  - variable: FIREBASE_CLIENT_EMAIL
-    value: "firebase-adminsdk-fbsvc@davidsaas-d74b2.iam.gserviceaccount.com"
-  - variable: FIREBASE_PRIVATE_KEY
 
 # Configuração de Segredos (devem estar no Google Cloud Secret Manager)
 # Para a Private Key, o Firebase recomenda usar o Secret Manager para segurança total.
