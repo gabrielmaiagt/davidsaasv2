@@ -13,26 +13,17 @@ function getAdminApp() {
 
     if (b64Key) {
       console.log('FIREBASE: Using B64 encoded private key');
-      const cleanB64 = b64Key.trim().replace(/^["']|["']$/g, '');
-      privateKey = Buffer.from(cleanB64, 'base64').toString('utf-8');
+      privateKey = Buffer.from(b64Key, 'base64').toString('utf-8');
     } else {
       privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
     }
 
-    // --- RECONSTRUÇÃO ULTRA-ROBUSTA DE PEM ---
-    // Remove qualquer versão de cabeçalho/rodapé (com ou sem espaços/hífens variados)
-    const strippedKey = privateKey
-      .replace(/-----[^-]*-----/g, '') // Remove qualquer coisa entre 5 hífens (cabeçalhos/rodapés)
-      .replace(/\\n/g, '')             // Remove \n literal
-      .replace(/\s/g, '');             // Remove qualquer espaço, quebra de linha real ou tab
+    // Limpeza padrão (idêntica ao localhost)
+    // Remove aspas acidentais e converte \n literais para quebras reais
+    privateKey = privateKey.trim().replace(/^["']|["']$/g, '').replace(/\\n/g, '\n');
 
-    // Reconstrói com quebras de linha a cada 64 caracteres (padrão RFC/OpenSSL)
-    // Isso garante que o motor de criptografia do Node não reclame de formato.
-    const matches = strippedKey.match(/.{1,64}/g);
-    privateKey = `-----BEGIN PRIVATE KEY-----\n${matches?.join('\n')}\n-----END PRIVATE KEY-----\n`;
-    
     console.log('FIREBASE: Project:', projectId);
-    console.log('FIREBASE: Key Length (Reconstructed):', privateKey.length);
+    console.log('FIREBASE: Key Length:', privateKey.length);
     console.log('FIREBASE: Ready for Auth?', privateKey.includes('BEGIN PRIVATE KEY'));
 
     const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (projectId ? `${projectId}.firebasestorage.app` : undefined);
