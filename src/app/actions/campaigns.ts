@@ -188,7 +188,7 @@ export async function duplicateCampaignAction(id: string) {
         const chunk = docs.slice(i, i + chunkSize);
         const batch = db.batch();
         
-        chunk.forEach(doc => {
+        chunk.forEach((doc: any) => {
           const creativeData = doc.data();
           const newDocRef = db.collection('creatives').doc(); // Gera novo ID
           batch.set(newDocRef, {
