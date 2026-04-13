@@ -46,9 +46,9 @@ function getAdminApp() {
         storageBucket,
       });
     }
-  } catch (error) {
-    console.error('Firebase Admin initialization failed:', error);
-    return null;
+  } catch (error: any) {
+    console.error('FIREBASE: Initialization Error:', error.message);
+    throw new Error(`Firebase initialization failed: ${error.message}`);
   }
 }
 
