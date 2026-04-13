@@ -4,22 +4,24 @@ function getAdminApp() {
   if (admin.apps.length > 0) return admin.apps[0];
 
   try {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    // Limpeza de campos básicos (previne espaços invisíveis no console)
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+    const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim() || (projectId ? `${projectId}.firebasestorage.app` : undefined);
     
-    // 1. Tenta pegar a versão blindada (Base64) - Melhor para Produção
     let privateKey = '';
     const b64Key = process.env.FIREBASE_PRIVATE_KEY_B64;
+    const rawKey = process.env.FIREBASE_PRIVATE_KEY;
 
     if (b64Key) {
       console.log('FIREBASE: Using B64 encoded private key');
-      privateKey = Buffer.from(b64Key, 'base64').toString('utf-8');
-    } else {
-      privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+      privateKey = Buffer.from(b64Key.trim(), 'base64').toString('utf-8');
+    } else if (rawKey) {
+      console.log('FIREBASE: Using RAW private key from environment');
+      privateKey = rawKey;
     }
 
     // Limpeza ultra-agressiva (idêntica ao localhost + remoção de caracteres invisíveis)
-    // Remove aspas, espaços de largura zero, e converte \n literais
     privateKey = privateKey
       .trim()
       .replace(/^["']|["']$/g, '')
