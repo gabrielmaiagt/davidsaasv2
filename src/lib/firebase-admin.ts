@@ -7,27 +7,18 @@ function getAdminApp() {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     
-    // Reconstrução RÍGIDA do envelope PEM para evitar erros de DECODER
+    // Normalização simplificada e robusta
     let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
     
-    // 1. Limpeza total de aspas e espaços
+    // Remove aspas e espaços extras que o painel pode colocar
     rawKey = rawKey.trim().replace(/^["']|["']$/g, '');
     
-    // 2. Extrai apenas o conteúdo Base64 (remove cabeçalhos e quebras de linha se existirem)
-    let body = rawKey
-      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-      .replace(/-----END PRIVATE KEY-----/g, '')
-      .replace(/\\n/g, '')
-      .replace(/\s/g, '');
-
-    // 3. Reconstrói o envelope PEM com quebras de linha a cada 64 caracteres (Padrão RFC 7468)
-    const matches = body.match(/.{1,64}/g);
-    const formattedBody = matches ? matches.join('\n') : body;
-    const privateKey = `-----BEGIN PRIVATE KEY-----\n${formattedBody}\n-----END PRIVATE KEY-----`;
+    // Converte \n literal para quebra de linha real (essencial para Linux/Produção)
+    const privateKey = rawKey.replace(/\\n/g, '\n');
 
     console.log('FIREBASE: Project:', projectId);
-    console.log('FIREBASE: Key Length (final):', privateKey.length);
-    console.log('FIREBASE: Key Sample:', privateKey.substring(0, 35) + '...');
+    console.log('FIREBASE: Key Length:', privateKey.length);
+    console.log('FIREBASE: Ready for Auth?', privateKey.includes('BEGIN PRIVATE KEY'));
 
     // Fallback inteligente para o nome do bucket se a variável estiver faltando
     const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || (projectId ? `${projectId}.firebasestorage.app` : undefined);
