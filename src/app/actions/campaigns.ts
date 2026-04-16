@@ -143,6 +143,43 @@ export async function deleteCampaignAction(id: string) {
   revalidatePath('/dashboard/campaigns');
 }
 
+export async function refreshCampaignFeedAction(id: string) {
+  const orgId = await getOrganizationId();
+  if (!orgId) throw new Error('Não autorizado');
+
+  const doc = await db.collection('campaigns').doc(id).get();
+  if (!doc.exists || doc.data()?.organizationId !== orgId) throw new Error('Acesso negado');
+
+  const newToken = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+
+  // Atualiza o token da campanha
+  await db.collection('campaigns').doc(id).update({
+    feedToken: newToken,
+    updatedAt: new Date().toISOString(),
+  });
+
+  // Atualiza metadados (updatedAt) de todos os criativos da campanha
+  const creativesSnap = await db.collection('creatives')
+    .where('campaignId', '==', id)
+    .where('organizationId', '==', orgId)
+    .get();
+
+  if (!creativesSnap.empty) {
+    const chunkSize = 500;
+    const docs = creativesSnap.docs;
+    for (let i = 0; i < docs.length; i += chunkSize) {
+      const batch = db.batch();
+      docs.slice(i, i + chunkSize).forEach((d: any) => {
+        batch.update(d.ref, { updatedAt: new Date().toISOString() });
+      });
+      await batch.commit();
+    }
+  }
+
+  revalidatePath('/dashboard/campaigns');
+  return { token: newToken };
+}
+
 export async function duplicateCampaignAction(id: string) {
   const orgId = await getOrganizationId();
   if (!orgId) throw new Error('Não autorizado');

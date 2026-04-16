@@ -33,6 +33,7 @@ export interface Campaign {
   brand: string;
   category: string;
   
+  feedToken?: string;
   createdAt: string;
   updatedAt: string;
 }

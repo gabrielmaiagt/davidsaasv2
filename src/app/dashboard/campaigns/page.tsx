@@ -1,8 +1,8 @@
 import { db } from '@/lib/firebase-admin';
 import { Campaign } from '@/types';
 import Link from 'next/link';
-import { PlusCircle, Star, Megaphone } from 'lucide-react';
-import SetDefaultButton from './SetDefaultButton';
+import { PlusCircle, Megaphone } from 'lucide-react';
+import UpdateLinkButton from './UpdateLinkButton';
 import DeleteCampaignButton from './DeleteCampaignButton';
 import DuplicateCampaignButton from './DuplicateCampaignButton';
 import FeedUrlInput from './FeedUrlInput';
@@ -105,12 +105,12 @@ export default async function CampaignsPage() {
                 
                 <div className="mt-4 pt-4 border-t border-outline-variant/10">
                   <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] mb-3">Live Feed URL (Auto-sync) 👇</p>
-                  <FeedUrlInput id={campaign.id} />
+                  <FeedUrlInput id={campaign.id} token={campaign.feedToken} />
                 </div>
               </div>
 
               <div className="bg-surface-container-high/50 p-4 border-t border-outline-variant/10 flex items-center justify-between gap-3">
-                <SetDefaultButton id={campaign.id} isDefault={campaign.isDefault} />
+                <UpdateLinkButton id={campaign.id} defaultLink={campaign.defaultLink} />
                 <div className="flex items-center gap-2">
                   <Link href={`/dashboard/campaigns/${campaign.id}/edit`} className="text-[10px] font-black uppercase tracking-widest bg-surface-container-highest hover:bg-surface-container-high text-on-surface-variant hover:text-white px-3 py-2 rounded-lg transition-all border border-outline-variant/20">
                     Editar

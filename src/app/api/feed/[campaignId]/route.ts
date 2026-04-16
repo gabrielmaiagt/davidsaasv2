@@ -18,11 +18,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   try {
-    // 1. Fetch the Campaign data first to identify the owner organization
-    const campaignDoc = await db.collection('campaigns').doc(campaignId).get();
-    
+    // 1. Fetch campaign — first try by document ID, then by feedToken
+    let campaignDoc = await db.collection('campaigns').doc(campaignId).get();
+
     if (!campaignDoc.exists) {
-       return new Response('Campaign not found', { status: 404 });
+      const tokenSnap = await db.collection('campaigns')
+        .where('feedToken', '==', campaignId)
+        .limit(1)
+        .get();
+      if (tokenSnap.empty) {
+        return new Response('Campaign not found', { status: 404 });
+      }
+      campaignDoc = tokenSnap.docs[0] as any;
     }
 
     const campaignData = campaignDoc.data()!;

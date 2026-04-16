@@ -3,15 +3,14 @@
 import { useEffect, useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 
-export default function FeedUrlInput({ id }: { id: string }) {
+export default function FeedUrlInput({ id, token }: { id: string; token?: string }) {
   const [fullUrl, setFullUrl] = useState('');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // Paga o domínio real do navegador
     const origin = window.location.origin;
-    setFullUrl(`${origin}/api/feed/${id}.xml`);
-  }, [id]);
+    setFullUrl(token ? `${origin}/api/feed/${token}.xml` : `${origin}/api/feed/${id}.xml`);
+  }, [id, token]);
 
   const copyToClipboard = () => {
     if (!fullUrl) return;

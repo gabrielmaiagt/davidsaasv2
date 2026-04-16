@@ -22,7 +22,6 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Campanhas', href: '/dashboard/campaigns', icon: Megaphone },
   { name: 'Criativos', href: '/dashboard/creatives', icon: Video },
-  { name: 'Exportações', href: '/dashboard/exports', icon: FileOutput },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -83,31 +82,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* TopAppBar */}
-      <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-background/80 backdrop-blur-md z-40 flex items-center justify-between px-8 border-b border-outline-variant/10 shadow-[0_4px_32px_rgba(95,255,247,0.04)]">
-        <div className="flex items-center gap-6">
-          {/* Busca Removida */}
-          <nav className="hidden h:flex gap-6 items-center">
-             <Link href="#" className="text-on-surface-variant font-headline font-medium text-xs hover:text-primary transition-colors uppercase tracking-widest">Performance</Link>
-             <Link href="#" className="text-on-surface-variant font-headline font-medium text-xs hover:text-primary transition-colors uppercase tracking-widest">Logs</Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Sincronização Removida */}
-          
-          <div className="flex items-center gap-3 border-l border-outline-variant/20 pl-4 ml-2">
-            <button className="h-8 w-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/30 hover:border-primary/50 transition-all active:scale-90 group ring-offset-background focus:ring-2 focus:ring-primary">
-               <div className="bg-gradient-to-br from-primary to-tertiary w-full h-full flex items-center justify-center text-[10px] font-black text-on-primary group-hover:brightness-110 transition-all">
-                 M
-               </div>
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content Area */}
-      <main className="flex-1 ml-64 pt-24 p-8 min-h-screen">
+      <main className="flex-1 ml-64 pt-8 p-8 min-h-screen">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>

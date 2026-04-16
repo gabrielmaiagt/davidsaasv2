@@ -250,6 +250,35 @@ export async function updateCreativeAction(id: string, formData: FormData) {
 }
 
 
+export async function bulkUpdateCreativesLinkAction(campaignId: string, newLink: string) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  try {
+    const snap = await db.collection('creatives')
+      .where('campaignId', '==', campaignId)
+      .where('organizationId', '==', orgId)
+      .get();
+
+    if (snap.empty) return { success: true, count: 0 };
+
+    const chunkSize = 500;
+    const docs = snap.docs;
+    for (let i = 0; i < docs.length; i += chunkSize) {
+      const batch = db.batch();
+      docs.slice(i, i + chunkSize).forEach((doc: any) => {
+        batch.update(doc.ref, { finalUrl: newLink, updatedAt: new Date().toISOString() });
+      });
+      await batch.commit();
+    }
+
+    revalidatePath('/dashboard/creatives');
+    return { success: true, count: docs.length };
+  } catch (error: any) {
+    return { error: error.message || 'Falha ao atualizar criativos' };
+  }
+}
+
 export async function deleteCreativeAction(id: string) {
   console.log('SERVER: Chamando deleteCreativeAction para id:', id);
   const orgId = await getOrganizationId();
