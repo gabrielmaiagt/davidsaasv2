@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { getOrganizationId } from '@/lib/session';
+import { diversifyCreative } from '@/lib/diversify';
 
 export async function uploadFileToStorage(file: File, folder: string): Promise<string> {
   if (!file || file.size === 0) return '';
@@ -129,9 +130,10 @@ export async function duplicateCreativeAction(id: string, count: number) {
 
     for (let i = 1; i <= count; i++) {
       const newSku = `${original.sku}-C${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+      const diversified = diversifyCreative({ ...original, sku: newSku }, i);
       const copy = {
         ...original,
-        title: `${original.title} (Clone ${i})`,
+        ...diversified,
         sku: newSku,
         externalId: newSku,
         createdAt: new Date().toISOString(),
@@ -178,13 +180,15 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
     const chunkSize = 500;
     const allOperations: any[] = [];
     
+    let globalIndex = 0;
     originalDocs.forEach((doc: any) => {
       const original = doc.data();
       for (let i = 1; i <= count; i++) {
         const newSku = `${original.sku}-BC${i}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+        const diversified = diversifyCreative({ ...original, sku: newSku }, globalIndex++);
         const copy = {
           ...original,
-          title: `${original.title} (Clone ${i})`,
+          ...diversified,
           sku: newSku,
           externalId: newSku,
           createdAt: new Date().toISOString(),
@@ -276,6 +280,42 @@ export async function bulkUpdateCreativesLinkAction(campaignId: string, newLink:
     return { success: true, count: docs.length };
   } catch (error: any) {
     return { error: error.message || 'Falha ao atualizar criativos' };
+  }
+}
+
+export async function diversifyAllCreativesAction(campaignId: string) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  try {
+    const snap = await db.collection('creatives')
+      .where('campaignId', '==', campaignId)
+      .where('organizationId', '==', orgId)
+      .get();
+
+    if (snap.empty) return { success: true, count: 0 };
+
+    const chunkSize = 500;
+    const docs = snap.docs;
+
+    for (let i = 0; i < docs.length; i += chunkSize) {
+      const batch = db.batch();
+      docs.slice(i, i + chunkSize).forEach((doc: any, j: number) => {
+        const data = doc.data();
+        const diversified = diversifyCreative(data, i + j);
+        batch.update(doc.ref, {
+          ...diversified,
+          updatedAt: new Date().toISOString(),
+        });
+      });
+      await batch.commit();
+    }
+
+    revalidatePath('/dashboard/campaigns');
+    revalidatePath('/dashboard/creatives');
+    return { success: true, count: docs.length };
+  } catch (error: any) {
+    return { error: error.message || 'Falha ao diversificar criativos' };
   }
 }
 

@@ -5,6 +5,7 @@ import { Campaign } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getOrganizationId } from '@/lib/session';
+import { diversifyCreative } from '@/lib/diversify';
 
 export async function createCampaignAction(state: any, formData: FormData) {
   const orgId = await getOrganizationId();
@@ -224,12 +225,17 @@ export async function duplicateCampaignAction(id: string) {
       for (let i = 0; i < docs.length; i += chunkSize) {
         const chunk = docs.slice(i, i + chunkSize);
         const batch = db.batch();
-        
-        chunk.forEach((doc: any) => {
+
+        chunk.forEach((doc: any, j: number) => {
           const creativeData = doc.data();
-          const newDocRef = db.collection('creatives').doc(); // Gera novo ID
+          const newSku = `${creativeData.sku}-CP-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+          const diversified = diversifyCreative({ ...creativeData, sku: newSku }, i + j);
+          const newDocRef = db.collection('creatives').doc();
           batch.set(newDocRef, {
             ...creativeData,
+            ...diversified,
+            sku: newSku,
+            externalId: newSku,
             campaignId: newCampaignId,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
