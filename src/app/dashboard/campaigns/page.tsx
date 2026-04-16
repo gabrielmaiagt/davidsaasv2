@@ -110,7 +110,7 @@ export default async function CampaignsPage() {
               </div>
 
               <div className="bg-surface-container-high/50 p-4 border-t border-outline-variant/10 flex items-center justify-between gap-3">
-                <UpdateLinkButton id={campaign.id} defaultLink={campaign.defaultLink} />
+                <UpdateLinkButton id={campaign.id} />
                 <div className="flex items-center gap-2">
                   <Link href={`/dashboard/campaigns/${campaign.id}/edit`} className="text-[10px] font-black uppercase tracking-widest bg-surface-container-highest hover:bg-surface-container-high text-on-surface-variant hover:text-white px-3 py-2 rounded-lg transition-all border border-outline-variant/20">
                     Editar
