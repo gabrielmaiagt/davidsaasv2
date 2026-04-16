@@ -76,13 +76,16 @@ export async function createCreativeAction(state: any, formData: FormData, redir
     const generatedSku = skuInput || `SKU-${uuidv4().split('-')[0].toUpperCase()}`;
     const tags = tagsStr ? tagsStr.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
 
+    const vSep = videoUrl.includes('?') ? '&' : '?';
+    const uniqueVideoUrl = `${videoUrl}${vSep}v=${generatedSku}`;
+
     const creative = {
       organizationId: orgId,
       campaignId,
       title,
       description,
       finalUrl,
-      videoUrl,
+      videoUrl: uniqueVideoUrl,
       imageUrl,
       sku: generatedSku,
       externalId: generatedSku,

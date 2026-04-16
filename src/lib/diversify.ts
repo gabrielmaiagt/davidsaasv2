@@ -92,9 +92,18 @@ export function diversifyCreative(original: any, globalIndex: number) {
   const offset = PRICE_OFFSETS[n % PRICE_OFFSETS.length];
   const newPrice = basePrice > 0 ? Math.max(1, Math.round((basePrice + offset) * 100) / 100) : basePrice;
 
+  // videoUrl — append ?v={sku} so each creative has a unique video URL
+  let newVideoUrl = original.videoUrl || '';
+  if (newVideoUrl) {
+    newVideoUrl = newVideoUrl.replace(/[?&]v=[^&]*/g, '').replace(/\?$/, '');
+    const vSep = newVideoUrl.includes('?') ? '&' : '?';
+    newVideoUrl = `${newVideoUrl}${vSep}v=${original.sku}`;
+  }
+
   return {
     title: newTitle,
     finalUrl: newUrl || original.finalUrl,
+    videoUrl: newVideoUrl || original.videoUrl,
     description: newDesc || original.description,
     price: newPrice || original.price,
   };
