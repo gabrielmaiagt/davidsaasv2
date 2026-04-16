@@ -159,7 +159,7 @@ export async function refreshCampaignFeedAction(id: string) {
     updatedAt: new Date().toISOString(),
   });
 
-  // Atualiza metadados (updatedAt) de todos os criativos da campanha
+  // Diversifica metadados de todos os criativos da campanha
   const creativesSnap = await db.collection('creatives')
     .where('campaignId', '==', id)
     .where('organizationId', '==', orgId)
@@ -170,8 +170,10 @@ export async function refreshCampaignFeedAction(id: string) {
     const docs = creativesSnap.docs;
     for (let i = 0; i < docs.length; i += chunkSize) {
       const batch = db.batch();
-      docs.slice(i, i + chunkSize).forEach((d: any) => {
-        batch.update(d.ref, { updatedAt: new Date().toISOString() });
+      docs.slice(i, i + chunkSize).forEach((d: any, j: number) => {
+        const data = d.data();
+        const diversified = diversifyCreative(data, i + j);
+        batch.update(d.ref, { ...diversified, updatedAt: new Date().toISOString() });
       });
       await batch.commit();
     }
