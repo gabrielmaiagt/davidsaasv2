@@ -106,6 +106,22 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     setPendingFiles((prev: PendingFile[]) => prev.filter((f: PendingFile) => f.id !== id));
   };
 
+  const injectFreeBox = async (file: File): Promise<File> => {
+    const buffer = await file.arrayBuffer();
+    const uid = crypto.randomUUID().replace(/-/g, '');
+    const payload = new TextEncoder().encode(uid);
+    const boxSize = 8 + payload.length;
+    const freeBox = new Uint8Array(boxSize);
+    const view = new DataView(freeBox.buffer);
+    view.setUint32(0, boxSize);
+    freeBox[4] = 0x66; freeBox[5] = 0x72; freeBox[6] = 0x65; freeBox[7] = 0x65; // 'free'
+    freeBox.set(payload, 8);
+    const combined = new Uint8Array(buffer.byteLength + boxSize);
+    combined.set(new Uint8Array(buffer), 0);
+    combined.set(freeBox, buffer.byteLength);
+    return new File([combined], file.name, { type: file.type });
+  };
+
   const handleUploadAll = async () => {
     if (!selectedCampaignId) {
       setGlobalError('Selecione uma campanha antes de subir.');
@@ -123,10 +139,11 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
       setPendingFiles((prev: PendingFile[]) => prev.map((p: PendingFile) => p.id === item.id ? { ...p, status: 'uploading' } : p));
 
       try {
+        const uniqueVideo = await injectFreeBox(item.file);
         const formData = new FormData();
         formData.append('campaignId', selectedCampaignId);
         formData.append('title', item.title);
-        formData.append('video', item.file);
+        formData.append('video', uniqueVideo);
         
         if (item.thumbnail) {
           formData.append('image', item.thumbnail, 'thumb.jpg');
