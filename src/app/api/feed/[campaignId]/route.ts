@@ -32,6 +32,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       campaignDoc = tokenSnap.docs[0] as any;
     }
 
+    // Sempre usar o ID real do documento a partir daqui (o param pode ter sido o feedToken)
+    campaignId = campaignDoc.id;
+
     const campaignData = campaignDoc.data()!;
     const orgId = campaignData.organizationId;
 
