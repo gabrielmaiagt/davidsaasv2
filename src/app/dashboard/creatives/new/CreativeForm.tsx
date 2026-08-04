@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { createCreativeAction } from '@/app/actions/creatives';
+import { createCreativeAction, getUploadUrlAction } from '@/app/actions/creatives';
 import { Loader2, Upload, Video as VideoIcon, CheckCircle2, XCircle, Trash2, FileVideo } from 'lucide-react';
 import { Campaign } from '@/types';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -122,6 +122,21 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     return new File([combined], file.name, { type: file.type });
   };
 
+  // Sobe um arquivo direto pro Storage via Signed URL, sem passar pelo corpo
+  // da Server Action (a Vercel limita requests de função a 4.5MB).
+  const uploadDirectToStorage = async (file: File | Blob, filename: string, contentType: string, folder: 'videos' | 'images') => {
+    const { uploadUrl, path } = await getUploadUrlAction(filename, contentType, folder);
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!res.ok) {
+      throw new Error(`Falha ao enviar arquivo para o Storage (${res.status})`);
+    }
+    return path;
+  };
+
   const handleUploadAll = async () => {
     if (!selectedCampaignId) {
       setGlobalError('Selecione uma campanha antes de subir.');
@@ -140,13 +155,20 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
 
       try {
         const uniqueVideo = await injectFreeBox(item.file);
+        const videoContentType = uniqueVideo.type || 'video/mp4';
+        const videoPath = await uploadDirectToStorage(uniqueVideo, uniqueVideo.name, videoContentType, 'videos');
+
+        let imagePath = '';
+        if (item.thumbnail) {
+          imagePath = await uploadDirectToStorage(item.thumbnail, 'thumb.jpg', 'image/jpeg', 'images');
+        }
+
         const formData = new FormData();
         formData.append('campaignId', selectedCampaignId);
         formData.append('title', item.title);
-        formData.append('video', uniqueVideo);
-        
-        if (item.thumbnail) {
-          formData.append('image', item.thumbnail, 'thumb.jpg');
+        formData.append('videoPath', videoPath);
+        if (imagePath) {
+          formData.append('imagePath', imagePath);
         }
 
         // Chama a ação sem redirecionar

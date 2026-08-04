@@ -8,24 +8,28 @@ import { v4 as uuidv4 } from 'uuid';
 import { getOrganizationId } from '@/lib/session';
 import { diversifyCreative } from '@/lib/diversify';
 
-export async function uploadFileToStorage(file: File, folder: string): Promise<string> {
-  if (!file || file.size === 0) return '';
-  
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const filename = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  
+// Gera uma Signed URL para o navegador subir o arquivo direto pro Storage,
+// sem passar pelo corpo da Server Action (Vercel limita requests a 4.5MB).
+export async function getUploadUrlAction(filename: string, contentType: string, folder: 'videos' | 'images') {
+  const orgId = await getOrganizationId();
+  if (!orgId) throw new Error('Não autorizado');
+
+  if (!storage) {
+    throw new Error('Storage não configurado');
+  }
+
+  const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const path = `${folder}/${Date.now()}-${safeName}`;
   const bucket = storage.bucket();
-  const fileRef = bucket.file(filename);
-  
-  await fileRef.save(buffer, {
-    metadata: {
-      contentType: file.type,
-    },
+
+  const [uploadUrl] = await bucket.file(path).getSignedUrl({
+    version: 'v4',
+    action: 'write',
+    expires: Date.now() + 15 * 60 * 1000,
+    contentType,
   });
 
-  await fileRef.makePublic();
-  
-  return `https://storage.googleapis.com/${bucket.name}/${filename}`;
+  return { uploadUrl, path };
 }
 
 export async function createCreativeAction(state: any, formData: FormData, redirectResponse: boolean = true) {
@@ -52,25 +56,30 @@ export async function createCreativeAction(state: any, formData: FormData, redir
     const availability = formData.get('availability') as string || 'in stock';
     const price = formData.get('price') ? Number(formData.get('price')) : null;
 
-    const videoFile = formData.get('video') as File;
-    const imageFile = formData.get('image') as File;
+    // O navegador já subiu os arquivos direto pro Storage via Signed URL
+    // (evita o limite de 4.5MB de request body da Vercel); aqui só recebemos os paths.
+    const videoPath = formData.get('videoPath') as string;
+    const imagePath = formData.get('imagePath') as string;
 
-    if (!videoFile || videoFile.size === 0) {
+    if (!videoPath) {
       return { error: 'Nenhum vídeo enviado ou arquivo corrompido.' };
     }
 
-    // O upload pode falhar se as permissões do Storage estiverem incorretas
     let videoUrl = '';
     let imageUrl = '';
-    
+
     try {
-      videoUrl = await uploadFileToStorage(videoFile, 'videos');
-      imageUrl = imageFile && imageFile.size > 0 
-        ? await uploadFileToStorage(imageFile, 'images') 
-        : '';
+      const bucket = storage.bucket();
+      await bucket.file(videoPath).makePublic();
+      videoUrl = `https://storage.googleapis.com/${bucket.name}/${videoPath}`;
+
+      if (imagePath) {
+        await bucket.file(imagePath).makePublic();
+        imageUrl = `https://storage.googleapis.com/${bucket.name}/${imagePath}`;
+      }
     } catch (storageErr: any) {
       console.error('STORAGE ERROR:', storageErr);
-      return { error: `Falha no upload para o Storage: ${storageErr.message || 'Erro desconhecido'}` };
+      return { error: `Falha ao finalizar upload no Storage: ${storageErr.message || 'Erro desconhecido'}` };
     }
 
     const generatedSku = skuInput || `SKU-${uuidv4().split('-')[0].toUpperCase()}`;
