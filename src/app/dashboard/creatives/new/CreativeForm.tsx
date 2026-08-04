@@ -47,12 +47,18 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
       video.onloadeddata = () => {
         video.play().then(() => {
           setTimeout(() => {
+            // TikTok Catalog exige imagem com no mínimo 500x500px
+            const MIN_DIMENSION = 500;
+            const rawWidth = video.videoWidth || MIN_DIMENSION;
+            const rawHeight = video.videoHeight || MIN_DIMENSION;
+            const scale = Math.max(1, MIN_DIMENSION / rawWidth, MIN_DIMENSION / rawHeight);
+
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = Math.ceil(rawWidth * scale);
+            canvas.height = Math.ceil(rawHeight * scale);
             const ctx = canvas.getContext('2d');
-            ctx?.drawImage(video, 0, 0);
-            
+            ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+
             canvas.toBlob((blob) => {
               video.pause();
               URL.revokeObjectURL(url);
