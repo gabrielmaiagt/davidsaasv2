@@ -92,6 +92,7 @@ export async function createCreativeAction(state: any, formData: FormData, redir
       organizationId: orgId,
       campaignId,
       title,
+      sourceName: title, // preserva o nome original pra sempre, mesmo depois de diversificado/duplicado
       description,
       finalUrl,
       videoUrl: uniqueVideoUrl,
@@ -148,6 +149,7 @@ export async function duplicateCreativeAction(id: string, count: number) {
         ...diversified,
         sku: newSku,
         externalId: newSku,
+        sourceName: `${original.sourceName || original.title}_${i}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -203,6 +205,7 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
           ...diversified,
           sku: newSku,
           externalId: newSku,
+          sourceName: `${original.sourceName || original.title}_${i}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };

@@ -44,6 +44,7 @@ export interface Creative {
   organizationId: string;
   campaignId: string;
   title: string;
+  sourceName?: string; // Nome original do criativo no upload, nunca alterado por diversificação/duplicação
   description: string;
   finalUrl: string;
   videoUrl: string;
