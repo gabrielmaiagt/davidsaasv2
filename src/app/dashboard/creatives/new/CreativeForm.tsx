@@ -172,6 +172,8 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
         const formData = new FormData();
         formData.append('campaignId', selectedCampaignId);
         formData.append('title', item.title);
+        // Nome literal do arquivo original (só sem a extensão), preservado pra sempre pra rastreamento
+        formData.append('sourceName', item.file.name.replace(/\.[^/.]+$/, ''));
         formData.append('videoPath', videoPath);
         if (imagePath) {
           formData.append('imagePath', imagePath);

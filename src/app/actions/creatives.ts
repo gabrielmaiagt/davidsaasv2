@@ -45,6 +45,7 @@ export async function createCreativeAction(state: any, formData: FormData, redir
 
     const campaignId = formData.get('campaignId') as string;
     const title = formData.get('title') as string;
+    const sourceName = (formData.get('sourceName') as string) || title;
     const description = formData.get('description') as string;
     const finalUrl = formData.get('finalUrl') as string;
     const brand = formData.get('brand') as string;
@@ -92,7 +93,7 @@ export async function createCreativeAction(state: any, formData: FormData, redir
       organizationId: orgId,
       campaignId,
       title,
-      sourceName: title, // preserva o nome original pra sempre, mesmo depois de diversificado/duplicado
+      sourceName, // nome literal do arquivo original (sem extensão), nunca alterado depois
       description,
       finalUrl,
       videoUrl: uniqueVideoUrl,
