@@ -110,6 +110,12 @@ export default function NewCampaignPage() {
               <label className="text-sm font-medium text-zinc-300" htmlFor="category">Nicho da Oferta</label>
               <input id="category" name="category" type="text" placeholder="Ex: Saúde, Beleza, Drop" defaultValue="Geral" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
             </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-medium text-zinc-300" htmlFor="cid">Código de Rastreamento (opcional)</label>
+              <input id="cid" name="cid" type="text" placeholder="Deixe em branco pro sistema gerar automático" className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none text-sm" />
+              <p className="text-xs text-zinc-500">Deixe em branco e o sistema usa o identificador da própria campanha automaticamente. Só preencha se você já tiver um código próprio de outro sistema de rastreamento.</p>
+            </div>
           </div>
         </div>
 
