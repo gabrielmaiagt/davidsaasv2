@@ -16,18 +16,6 @@ function getRandomPrice(seed: string) {
   return GENERIC_PRICES[charCodeSum % GENERIC_PRICES.length];
 }
 
-// Injeta as UTMs (com o nome original do criativo, garantido pelo nosso próprio
-// código) + macros dinâmicas do TikTok (preenchidas por ele no clique) e o
-// código de rastreamento próprio da campanha, pra saber qual criativo vendeu cada venda.
-// DESATIVADO TEMPORARIAMENTE: mudar o formato do link de produtos que já
-// estavam rodando fez o TikTok pausar a entrega das campanhas antigas
-// (provavelmente re-revisão por mudança de destination URL). Voltando pro
-// link original até reintroduzir isso com mais cuidado (ex: só em campanhas
-// novas, ou testando com uma campanha de baixo risco primeiro).
-function appendTrackingParams(url: string, campaign: any, item: any): string {
-  return url;
-}
-
 export async function createXML(creatives: any[], campaignsMap: any) {
   // TikTok Ads standard catalog format
   const root = create({ version: '1.0', encoding: 'UTF-8' }).ele('rss', { version: '2.0', 'xmlns:g': 'http://base.google.com/ns/1.0' }).ele('channel');
@@ -39,7 +27,7 @@ export async function createXML(creatives: any[], campaignsMap: any) {
   creatives.forEach(item => {
     const campaign = campaignsMap[item.campaignId] || {};
     const defaultUrl = campaign.defaultLink || '';
-    const link = appendTrackingParams(item.finalUrl || defaultUrl || 'https://creative-feed.local', campaign, item);
+    const link = item.finalUrl || defaultUrl || 'https://creative-feed.local';
 
     const xmlItem = root.ele('item');
     xmlItem.ele('g:id').txt(item.sku || item.id);
@@ -81,7 +69,7 @@ function createCSV(creatives: any[], campaignsMap: any) {
       availability: item.availability || campaign.availability || 'in stock',
       condition: item.condition || campaign.condition || 'new',
       price: `${priceVal} ${currencyVal}`,
-      link: appendTrackingParams(item.finalUrl || defaultUrl || '', campaign, item),
+      link: item.finalUrl || defaultUrl || '',
       image_link: item.imageUrl || '',
       video_link: item.videoUrl || '',
       brand: item.brand || campaign.brand || 'Loja Oficial',
@@ -105,7 +93,7 @@ function createXLSX(creatives: any[], campaignsMap: any) {
       availability: item.availability || campaign.availability || 'in stock',
       condition: item.condition || campaign.condition || 'new',
       price: `${priceVal} ${currencyVal}`,
-      link: appendTrackingParams(item.finalUrl || defaultUrl || '', campaign, item),
+      link: item.finalUrl || defaultUrl || '',
       image_link: item.imageUrl || '',
       video_link: item.videoUrl || '',
       brand: item.brand || campaign.brand || 'Loja Oficial',

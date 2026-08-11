@@ -18,8 +18,7 @@ export async function createCampaignAction(state: any, formData: FormData) {
   const currency = formData.get('currency') as string || 'BRL';
   const brand = formData.get('brand') as string || 'Premium Store';
   const category = formData.get('category') as string || 'Anúncios';
-  const cid = formData.get('cid') as string || '';
-
+  
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
   
   if (!name) {
@@ -43,7 +42,6 @@ export async function createCampaignAction(state: any, formData: FormData) {
       currency,
       brand,
       category,
-      cid,
       organizationId: orgId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -98,7 +96,6 @@ export async function updateCampaignAction(id: string, state: any, formData: For
   const currency = formData.get('currency') as string;
   const brand = formData.get('brand') as string;
   const category = formData.get('category') as string;
-  const cid = formData.get('cid') as string || '';
 
   if (!name || !id) {
     return { error: 'O nome da Campanha é obrigatório.' };
@@ -118,7 +115,6 @@ export async function updateCampaignAction(id: string, state: any, formData: For
       currency,
       brand,
       category,
-      cid,
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {

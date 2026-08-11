@@ -32,8 +32,7 @@ export interface Campaign {
   currency: string; // Ex: BRL, USD
   brand: string;
   category: string;
-  cid?: string; // Código de rastreamento próprio, injetado como parâmetro nos links do feed
-
+  
   feedToken?: string;
   createdAt: string;
   updatedAt: string;
@@ -44,7 +43,6 @@ export interface Creative {
   organizationId: string;
   campaignId: string;
   title: string;
-  sourceName?: string; // Nome original do criativo no upload, nunca alterado por diversificação/duplicação
   description: string;
   finalUrl: string;
   videoUrl: string;

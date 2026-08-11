@@ -108,11 +108,6 @@ export default function CreativeCard({ creative }: { creative: any }) {
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col bg-[#111318]">
         <h4 className="text-xs font-black text-white truncate mb-1 font-headline tracking-tight group-hover:text-primary transition-colors">{creative.title}</h4>
-        {creative.sourceName && (
-          <p className="text-[9px] text-on-surface-variant/60 truncate mb-1" title={creative.sourceName}>
-            Original: <span className="text-on-surface-variant">{creative.sourceName}</span>
-          </p>
-        )}
         <p className="text-[9px] text-on-surface-variant/50 font-bold uppercase tracking-widest flex items-center gap-1 mb-4">
            SKU: <span className="text-on-surface-variant">{creative.sku.slice(-8)}</span>
         </p>

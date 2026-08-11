@@ -45,7 +45,6 @@ export async function createCreativeAction(state: any, formData: FormData, redir
 
     const campaignId = formData.get('campaignId') as string;
     const title = formData.get('title') as string;
-    const sourceName = (formData.get('sourceName') as string) || title;
     const description = formData.get('description') as string;
     const finalUrl = formData.get('finalUrl') as string;
     const brand = formData.get('brand') as string;
@@ -93,7 +92,6 @@ export async function createCreativeAction(state: any, formData: FormData, redir
       organizationId: orgId,
       campaignId,
       title,
-      sourceName, // nome literal do arquivo original (sem extensão), nunca alterado depois
       description,
       finalUrl,
       videoUrl: uniqueVideoUrl,
@@ -150,7 +148,6 @@ export async function duplicateCreativeAction(id: string, count: number) {
         ...diversified,
         sku: newSku,
         externalId: newSku,
-        sourceName: `${original.sourceName || original.title}_${i}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -206,7 +203,6 @@ export async function bulkDuplicateAction(campaignId: string, count: number) {
           ...diversified,
           sku: newSku,
           externalId: newSku,
-          sourceName: `${original.sourceName || original.title}_${i}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
