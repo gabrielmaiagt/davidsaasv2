@@ -19,25 +19,13 @@ function getRandomPrice(seed: string) {
 // Injeta as UTMs (com o nome original do criativo, garantido pelo nosso próprio
 // código) + macros dinâmicas do TikTok (preenchidas por ele no clique) e o
 // código de rastreamento próprio da campanha, pra saber qual criativo vendeu cada venda.
+// DESATIVADO TEMPORARIAMENTE: mudar o formato do link de produtos que já
+// estavam rodando fez o TikTok pausar a entrega das campanhas antigas
+// (provavelmente re-revisão por mudança de destination URL). Voltando pro
+// link original até reintroduzir isso com mais cuidado (ex: só em campanhas
+// novas, ou testando com uma campanha de baixo risco primeiro).
 function appendTrackingParams(url: string, campaign: any, item: any): string {
-  if (!url) return url;
-
-  const params = new URLSearchParams({
-    utm_source: 'tiktok',
-    utm_medium: 'cpc',
-    utm_campaign: '__CAMPAIGN_NAME__',
-    utm_content: item?.sourceName || item?.title || item?.sku || '',
-    utm_term: '__CID__',
-  });
-
-  // Usa o código manual se você preencheu; senão cai automaticamente no slug da campanha
-  const cid = campaign?.cid || campaign?.slug || '';
-  if (cid) {
-    params.set('cid', cid);
-  }
-
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}${params.toString()}`;
+  return url;
 }
 
 export async function createXML(creatives: any[], campaignsMap: any) {
