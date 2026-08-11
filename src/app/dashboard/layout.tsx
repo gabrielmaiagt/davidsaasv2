@@ -96,6 +96,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
         </div>
         <span className="text-[0.625rem] font-bold font-headline uppercase tracking-widest text-on-surface-variant">Live Feed Status: OK</span>
+        <span className="text-[0.625rem] font-bold font-headline uppercase tracking-widest text-on-surface-variant/40 border-l border-outline-variant/20 pl-3">
+          v{process.env.NEXT_PUBLIC_APP_VERSION}
+        </span>
       </div>
     </div>
   );
