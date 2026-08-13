@@ -35,6 +35,7 @@ admin.initializeApp({
 });
 
 const ORIGINS = [
+  'https://davidnovov3.vercel.app',
   'https://davidsaasv2-tu24.vercel.app',
   'http://localhost:3000',
 ];
