@@ -50,26 +50,45 @@ const DESC_CLOSERS = [
 // Micro price variations that stay realistic (±R$3, always ending naturally)
 const PRICE_OFFSETS = [0, -1, -2, -3, 1, -0.1, -1.1, -2.1, 0.9, -0.9];
 
-function cleanBaseTitle(title: string): string {
+// Remove pontuação órfã e espaços duplicados que sobram depois das limpezas
+// (era daqui que saíam títulos como "6Confira", "4 - - • Exclusivo", "6 - - Oficial").
+function normalizeTitle(title: string): string {
   return title
+    .replace(/\s+/g, ' ')                        // espaços duplicados
+    .replace(/(\s*[-|•]\s*){2,}/g, ' - ')        // separadores repetidos: "- -" => "-"
+    .replace(/^[\s\-|•✦✓→]+/, '')                // pontuação sobrando no início
+    .replace(/[\s\-|•✦✓→]+$/, '')                // pontuação sobrando no fim
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanBaseTitle(title: string): string {
+  const cleaned = title
     .replace(/\s*\(Clone\s*\d+\)\s*/gi, '')
     .replace(/\s*-\s*(BC|C)\d+-[A-Z0-9]+\s*/g, '')
-    .replace(/\s*(✦|✓|→)\s*/g, '')
-    .replace(/\s*\|\s*(Original|Exclusivo|Premium|Destaque|Especial|Top Pick|Único|Autêntico|Oficial)\s*/gi, '')
-    .replace(/\s*•\s*(Exclusivo|Único|Autêntico)\s*/gi, '')
+    // troca por espaço (não por vazio) pra não grudar palavras: "6 → Confira" -> "6 Confira"
+    .replace(/\s*(✦|✓|→)\s*/g, ' ')
+    .replace(/\s*\|\s*(Original|Exclusivo|Premium|Destaque|Especial|Top Pick|Único|Autêntico|Oficial)\s*/gi, ' ')
+    .replace(/\s*•\s*(Exclusivo|Único|Autêntico)\s*/gi, ' ')
+    .replace(/\s*→\s*Confira\s*/gi, ' ')
+    .replace(/\s*-\s*(Confira|Selecionado)\s*/gi, ' ')
     .replace(/^(Exclusivo|Original|Premium|Descubra|Garanta|Selecionado)\s+/gi, '')
-    .replace(/\s+(Oficial|Exclusivo|Autêntico|Selecionado|Genuíno)\s*$/gi, '')
-    .replace(/\s*-\s*(Oficial|Premium|Autêntico|Selecionado)\s*/gi, '')
-    .trim();
+    .replace(/\s+(Oficial|Exclusivo|Autêntico|Selecionado|Genuíno)\s*$/gi, ' ')
+    .replace(/\s*-\s*(Oficial|Premium|Autêntico|Selecionado)\s*/gi, ' ');
+
+  return normalizeTitle(cleaned);
 }
 
 export function diversifyCreative(original: any, globalIndex: number) {
   const n = globalIndex;
 
-  // Title
+  // Title — só decora se a base for um nome de produto de verdade.
+  // Base sem nenhuma palavra (ex: "4", "✦ 6") vira título inútil no catálogo,
+  // que é motivo de reprovação na revisão de conteúdo do TikTok.
   const base = cleanBaseTitle(original.title || '');
+  const baseValida = /[a-zA-ZÀ-ÿ]{3,}/.test(base);
   const titleFn = TITLE_TEMPLATES[n % TITLE_TEMPLATES.length];
-  const newTitle = base ? titleFn(base) : original.title;
+  const newTitle = baseValida ? normalizeTitle(titleFn(base)) : (original.title || '');
 
   // URL — add unique ref per SKU so every URL is distinct
   let newUrl = original.finalUrl || '';

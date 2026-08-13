@@ -49,6 +49,19 @@ export default function NewCampaignPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300" htmlFor="productName">Nome do Produto (aparece no catálogo)</label>
+            <input
+              id="productName"
+              name="productName"
+              type="text"
+              placeholder="Ex: Jogo de Panelas Antiaderente Cerâmica 10 Peças"
+              required
+              className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-md px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-colors text-sm"
+            />
+            <p className="text-xs text-zinc-500">É o título que o TikTok mostra em cada produto. Use o nome comercial real — títulos genéricos ou vindos do nome do arquivo (ex: &quot;1&quot;, &quot;IMG_1730&quot;) reprovam na revisão.</p>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium text-zinc-300" htmlFor="defaultDescription">Texto do Anúncio Padrão (Copy)</label>
             <textarea 
               id="defaultDescription" 

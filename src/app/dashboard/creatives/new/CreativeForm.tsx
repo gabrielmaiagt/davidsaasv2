@@ -84,12 +84,18 @@ export default function CreativeForm({ campaigns }: { campaigns: Campaign[] }) {
     const remaining = 15 - currentCount;
     const toAdd = files.slice(0, remaining);
 
+    // O título do catálogo vem do nome comercial da campanha, não do nome do arquivo.
+    // Arquivos chamados "1.MP4", "IMG_1730.MP4" geravam títulos inúteis no TikTok.
+    const campanha = campaigns.find((c: Campaign) => c.id === selectedCampaignId);
+    const nomeProduto = (campanha?.productName || '').trim();
+
     const newPending: PendingFile[] = toAdd.map((f: File) => {
       const isTooBig = f.size > 50 * 1024 * 1024; // 50MB
+      const nomeArquivo = f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
       return {
         id: Math.random().toString(36).substr(2, 9),
         file: f,
-        title: f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " "), // Nome limpo
+        title: nomeProduto || nomeArquivo,
         thumbnail: null,
         status: isTooBig ? 'error' : 'capturing',
         error: isTooBig ? 'Arquivo excede 50MB' : undefined

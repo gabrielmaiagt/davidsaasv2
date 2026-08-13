@@ -32,7 +32,8 @@ export interface Campaign {
   currency: string; // Ex: BRL, USD
   brand: string;
   category: string;
-  
+  productName?: string; // Nome comercial do produto — base dos títulos no catálogo
+
   feedToken?: string;
   createdAt: string;
   updatedAt: string;

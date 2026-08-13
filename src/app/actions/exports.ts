@@ -16,13 +16,29 @@ function getRandomPrice(seed: string) {
   return GENERIC_PRICES[charCodeSum % GENERIC_PRICES.length];
 }
 
+// google_product_category só aceita ID numérico ou o caminho completo da taxonomia
+// do Google. Valores livres como "Geral" são inválidos e reprovam na validação.
+const GOOGLE_CATEGORY_FALLBACK = 'Home & Garden';
+
+function resolveGoogleCategory(value?: string) {
+  if (!value) return GOOGLE_CATEGORY_FALLBACK;
+  const v = value.trim();
+  const ehValido = /^\d+$/.test(v) || v.includes('>');
+  return ehValido ? v : GOOGLE_CATEGORY_FALLBACK;
+}
+
 export async function createXML(creatives: any[], campaignsMap: any) {
   // TikTok Ads standard catalog format
   const root = create({ version: '1.0', encoding: 'UTF-8' }).ele('rss', { version: '2.0', 'xmlns:g': 'http://base.google.com/ns/1.0' }).ele('channel');
-  
-  root.ele('title').txt('Creative Feed');
-  root.ele('link').txt('https://creative-feed.local');
-  root.ele('description').txt('Products feed for direct response ads');
+
+  // O <link> do canal precisa ser um domínio real e acessível — antes ia
+  // "https://creative-feed.local", que não existe.
+  const primeiraCampanha: any = Object.values(campaignsMap || {})[0] || {};
+  const siteDaLoja = primeiraCampanha.defaultLink || '';
+
+  root.ele('title').txt(primeiraCampanha.name ? `${primeiraCampanha.name} - Catálogo` : 'Creative Feed');
+  if (siteDaLoja) root.ele('link').txt(siteDaLoja);
+  root.ele('description').txt(primeiraCampanha.defaultDescription || 'Catálogo de produtos');
 
   creatives.forEach(item => {
     const campaign = campaignsMap[item.campaignId] || {};
@@ -46,9 +62,9 @@ export async function createXML(creatives: any[], campaignsMap: any) {
     
     xmlItem.ele('g:brand').txt(item.brand || campaign.brand || 'Loja Oficial');
     
-    // Melhorando a performance de entrega com categorias
+    // g:google_product_category exige taxonomia válida; g:product_type é livre.
     const categoryVal = item.category || campaign.category || 'Geral';
-    xmlItem.ele('g:google_product_category').txt(categoryVal);
+    xmlItem.ele('g:google_product_category').txt(resolveGoogleCategory(campaign.googleCategory || item.category || campaign.category));
     xmlItem.ele('g:product_type').txt(categoryVal);
   });
 
