@@ -6,6 +6,7 @@ import UpdateLinkButton from './UpdateLinkButton';
 import DeleteCampaignButton from './DeleteCampaignButton';
 import DuplicateCampaignButton from './DuplicateCampaignButton';
 import FeedUrlInput from './FeedUrlInput';
+import DedupeVideosToggle from './DedupeVideosToggle';
 import { headers } from 'next/headers';
 import { getOrganizationId } from '@/lib/session';
 import { redirect } from 'next/navigation';
@@ -117,6 +118,9 @@ export default async function CampaignsPage() {
                   </Link>
                   <DuplicateCampaignButton id={campaign.id} />
                   <DeleteCampaignButton id={campaign.id} name={campaign.name} />
+                  <div className="ml-auto">
+                    <DedupeVideosToggle id={campaign.id} enabled={campaign.dedupeVideos} />
+                  </div>
                 </div>
               </div>
             </div>

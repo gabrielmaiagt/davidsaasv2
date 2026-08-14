@@ -130,6 +130,31 @@ export async function updateCampaignAction(id: string, state: any, formData: For
   redirect('/dashboard/campaigns');
 }
 
+// Liga/desliga a ingestão rápida: publica o vídeo sem o parâmetro único por
+// cópia, permitindo que o TikTok baixe cada arquivo uma vez só.
+export async function setDedupeVideosAction(id: string, enabled: boolean) {
+  const orgId = await getOrganizationId();
+  if (!orgId) return { error: 'Não autorizado' };
+
+  try {
+    const doc = await db.collection('campaigns').doc(id).get();
+    if (!doc.exists || doc.data()?.organizationId !== orgId) {
+      return { error: 'Acesso negado' };
+    }
+
+    await db.collection('campaigns').doc(id).update({
+      dedupeVideos: enabled,
+      updatedAt: new Date().toISOString(),
+    });
+
+    revalidatePath('/dashboard/campaigns');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error toggling dedupeVideos', error);
+    return { error: error.message || 'Falha ao alterar a configuração' };
+  }
+}
+
 export async function deleteCampaignAction(id: string) {
   const orgId = await getOrganizationId();
   if (!orgId) throw new Error('Não autorizado');

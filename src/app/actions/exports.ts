@@ -51,7 +51,12 @@ export async function createXML(creatives: any[], campaignsMap: any) {
     xmlItem.ele('g:description').txt(item.description || campaign.defaultDescription || item.title);
     xmlItem.ele('g:link').txt(link);
     xmlItem.ele('g:image_link').txt(item.imageUrl || '');
-    if (item.videoUrl) xmlItem.ele('g:video_link').txt(item.videoUrl);
+    // Com dedupeVideos ligado, remove o ?v=SKU: o TikTok passa a ver a mesma
+    // URL em todas as duplicatas e baixa o arquivo uma vez só.
+    const videoLink = campaign.dedupeVideos && item.videoUrl
+      ? item.videoUrl.split('?')[0]
+      : item.videoUrl;
+    if (videoLink) xmlItem.ele('g:video_link').txt(videoLink);
     xmlItem.ele('g:availability').txt(item.availability || campaign.availability || 'in stock');
     xmlItem.ele('g:condition').txt(item.condition || campaign.condition || 'new');
     

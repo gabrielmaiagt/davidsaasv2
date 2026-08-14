@@ -34,6 +34,12 @@ export interface Campaign {
   category: string;
   productName?: string; // Nome comercial do produto — base dos títulos no catálogo
 
+  // Experimento: quando true, o feed publica a URL do vídeo SEM o parâmetro
+  // único (?v=SKU), permitindo que o TikTok deduplique e baixe cada arquivo
+  // uma vez só em vez de uma vez por duplicata. Não aparece na interface —
+  // é ligado/desligado por script, para não alterar o fluxo de quem opera.
+  dedupeVideos?: boolean;
+
   feedToken?: string;
   createdAt: string;
   updatedAt: string;
