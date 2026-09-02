@@ -41,8 +41,14 @@ export function appendUtm(url: string, campaign: any, item: any): string {
     utm_source: 'tiktok',
     utm_medium: 'cpc',
     utm_campaign: '__CAMPAIGN_NAME__',
+    // Nosso identificador: único por cópia e rastreável até o vídeo no sistema.
     utm_content: item?.sku || item?.id || '',
     utm_term: '__CID__',
+    // Macros do TikTok, preenchidas por ele no clique. Mantidas junto do SKU
+    // porque ainda não sabemos como ele nomeia criativo vindo de catálogo —
+    // na primeira venda dá pra ver qual campo chega preenchido e ficar só com esse.
+    creative: '__CID_NAME__',
+    adgroup: '__AID_NAME__',
   });
 
   const cid = campaign?.cid || campaign?.slug || '';
