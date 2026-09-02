@@ -13,7 +13,8 @@ import {
   Search,
   HelpCircle,
   Bell,
-  ChevronRight
+  ChevronRight,
+  FlaskConical
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useActionState, useState } from 'react';
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Campanhas', href: '/dashboard/campaigns', icon: Megaphone },
   { name: 'Criativos', href: '/dashboard/creatives', icon: Video },
+  { name: 'Feeds UTM (teste)', href: '/dashboard/campaigns-utm', icon: FlaskConical },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
